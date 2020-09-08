@@ -12,10 +12,69 @@
 */
 
 /** @type {import('@adonisjs/lucid/src/Factory')} */
-// const Factory = use('Factory')
+const Factory = use('Factory')
 
-// Factory.blueprint('App/Models/User', (faker) => {
-//   return {
-//     username: faker.username()
-//   }
-// })
+
+/**
+ * Generate amount of fakers data of categories
+ */
+Factory.blueprint('App/Models/Category', faker => {
+    return {
+
+    }
+})
+
+Factory.blueprint('App/Models/User', (faker) => {
+    //default methods of chance api (https://chancejs.com)
+    return {
+        first_name: faker.first(),
+        last_name: faker.last(),
+        email: faker.email(),
+        password: 'secret', //set this string for all passwords registers when generate
+        birth_date: faker.birthday(),
+        gender: faker.gender(),
+        document: faker.cpf(),
+        phone: faker.phone(),
+        zip_code: faker.zip({ plusfour: true }),
+        address_street: faker.street(),
+        address_number: faker.integer({ min: 0, max: 100 }),
+        address_neighborhood: faker.province({ full: true }),
+        address_complement: faker.word({ length: 10 }),
+        address_reference: faker.word({ length: 10 }),
+        address_city: faker.city(),
+        address_state: faker.state({ full: true, country: 'br' })
+    }
+})
+
+
+Factory.blueprint('App/Models/Provider', (faker) => {
+    //default methods of chance api (https://chancejs.com)
+    return {
+        first_name: faker.first(),
+        last_name: faker.last(),
+        email: faker.email(),
+        password: 'secret', //set this string for all passwords registers when generate
+        birth_date: faker.birthday(),
+        gender: faker.gender(),
+        document: faker.cpf(),
+        phone: faker.phone(),
+        zip_code: faker.zip({ plusfour: true }),
+        address_street: faker.street(),
+        address_number: faker.integer({ min: 0, max: 100 }),
+        address_neighborhood: faker.province({ full: true }),
+        address_complement: faker.word({ length: 10 }),
+        address_reference: faker.word({ length: 10 }),
+        address_city: faker.city(),
+        address_state: faker.state({ full: true, country: 'us' })
+    }
+})
+
+
+
+Factory.blueprint('App/Models/Category', faker => {
+    //default methods of chance api (https://chancejs.com)
+    return {
+        name: faker.animal(),
+        description: faker.sentence()
+    }
+})

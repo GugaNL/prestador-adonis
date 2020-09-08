@@ -15,6 +15,7 @@ class ProviderSchema extends Schema {
       table.boolean('gender')
       table.integer('document')
       table.string('phone', 50)
+      table.string('zip_code', 100)
       table.string('address_street', 200)
       table.string('address_number', 100)
       table.string('address_neighborhood', 100)
