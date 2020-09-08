@@ -12,6 +12,7 @@ class ServiceSchema extends Schema {
       table.decimal('value', 12, 2)
       table.datetime('initial_datetime')
       table.datetime('final_datetime')
+      table.enu('status', [ 'confirmed', 'pending', 'cancelled', 'finished'])
       table.integer('category_id').unsigned()
       table.integer('user_id').unsigned()
       table.integer('provider_id').unsigned()

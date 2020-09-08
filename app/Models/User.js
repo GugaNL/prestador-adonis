@@ -7,7 +7,7 @@ const Model = use('Model')
 const Hash = use('Hash')
 
 class User extends Model {
-  static boot () {
+  static boot() {
     super.boot()
 
     /**
@@ -22,13 +22,29 @@ class User extends Model {
   }
 
 
-  static get traits () {
+  /**
+   * Format the date to the mysql pattern
+   */
+  static get dates() {
+    return ['birth_date']
+  }
+
+
+  /**
+   * Oculta os campos definidos no retorno das queries do DB
+   */
+  static get hidden() {
+    return ['password']
+  }
+
+
+  static get traits() {
     return [
       '@provider:Adonis/Acl/HasRole',
       '@provider:Adonis/Acl/HasPermission'
     ]
   }
-  
+
 
   /**
    * A relationship on tokens is required for auth to
@@ -40,9 +56,20 @@ class User extends Model {
    *
    * @return {Object}
    */
-  tokens () {
+  tokens() {
     return this.hasMany('App/Models/Token')
   }
+
+  //Return all info of image related
+  image() {
+    return this.belongsTo('App/Models/Image')
+  }
+
+  //Return the services of him
+  /*service() {
+    return this.belongsToMany('App/Models/Service')
+  }*/
+  
 }
 
 module.exports = User
