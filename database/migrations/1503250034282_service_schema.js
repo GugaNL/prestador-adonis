@@ -19,6 +19,7 @@ class ServiceSchema extends Schema {
 
       table.foreign('category_id').references('id').inTable('categories').onDelete('cascade')
       table.foreign('user_id').references('id').inTable('users').onDelete('cascade')
+      table.foreign('provider_id').references('id').inTable('providers').onDelete('cascade')
       table.timestamps()
     })
   }
