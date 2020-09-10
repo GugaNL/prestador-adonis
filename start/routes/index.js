@@ -19,3 +19,27 @@ const Route = use('Route')
 Route.get('/', () => {
   return { greeting: 'Hello world in JSON' }
 })
+
+
+/**
+ * Import auth routes
+ */
+require('./auth')
+
+
+/**
+ * Import admin routes
+ */
+require('./admin')
+
+
+/**
+ * Import eser routes
+ */
+require('./user')
+
+
+/**
+ * Import provider routes
+ */
+require('./provider')
