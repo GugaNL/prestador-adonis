@@ -12,8 +12,8 @@ class UserSchema extends Schema {
       table.string('email', 254).notNullable().unique()
       table.string('password', 60).notNullable()
       table.date('birth_date')
-      table.boolean('gender')
-      table.integer('document')
+      table.string('gender')
+      table.string('document', 100)
       table.string('phone', 50)
       table.string('zip_code', 100)
       table.string('address_street', 200)
@@ -25,6 +25,8 @@ class UserSchema extends Schema {
       table.string('address_state', 100)
       table.integer('image_id').unsigned()
       table.timestamps()
+
+      table.foreign('image_id').references('id').inTable('images').onDelete('cascade')
     })
   }
 
