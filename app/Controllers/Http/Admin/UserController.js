@@ -22,10 +22,12 @@ class UserController {
    */
   async index({ request, response, view, pagination }) {
     try {
-      const firstName = request.input('first_name')
+      const name = request.input('name')
       const query = User.query()
-      if (firstName) {
-        query.where('first_name', 'LIKE', `%${firstName}%`)
+      if (name) {
+        query.where('first_name', 'LIKE', `%${name}%`)
+        query.orWhere('last_name', 'LIKE', `%${name}%`)
+        query.orWhere('email', 'LIKE', `%${name}%`)
       }
       const users = await query.paginate(pagination.page, pagination.limit)
       return response.send({ success: true, data: users })
