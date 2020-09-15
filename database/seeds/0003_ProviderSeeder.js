@@ -31,7 +31,7 @@ class ProviderSeeder {
       first_name: 'Gustavo',
       last_name: 'Lucena',
       email: 'gugakaruaru@hotmail.com',
-      password: 'secret'
+      password: '123456'
     })
 
     //Percorre o objeto provider criado e associa a sua role admin (RoleSeeder)

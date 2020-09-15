@@ -3,6 +3,9 @@
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
+const User = use('App/Models/User')
+const Role = use('Role')
+const Database = use('Database')
 
 /**
  * Resourceful controller for interacting with users
@@ -17,7 +20,18 @@ class UserController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index ({ request, response, view }) {
+  async index({ request, response, view, pagination }) {
+    try {
+      const firstName = request.input('first_name')
+      const query = User.query()
+      if (firstName) {
+        query.where('first_name', 'LIKE', `%${firstName}%`)
+      }
+      const users = await query.paginate(pagination.page, pagination.limit)
+      return response.send({ success: true, data: users })
+    } catch (error) {
+      return response.send({ success: false, message: 'Falha ao tentar listar usuários' })
+    }
   }
 
   /**
@@ -28,7 +42,58 @@ class UserController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store ({ request, response }) {
+  async store({ request, response }) {
+    const trx = await Database.beginTransaction()
+
+    try {
+      const {
+        first_name,
+        last_name,
+        email,
+        password,
+        birth_date,
+        gender,
+        document,
+        phone,
+        zip_code,
+        address_street,
+        address_number,
+        address_neighborhood,
+        address_complement,
+        address_reference,
+        address_city,
+        address_state,
+        //image_id
+      } = request.all()
+
+      const user = await User.create({
+        first_name,
+        last_name,
+        email,
+        password,
+        birth_date,
+        gender,
+        document,
+        phone,
+        zip_code,
+        address_street,
+        address_number,
+        address_neighborhood,
+        address_complement,
+        address_reference,
+        address_city,
+        address_state,
+        //image_id
+      }, trx)
+
+      const userRole = await Role.findBy('slug', 'client') //Take the role for set in the user
+      await user.roles().attach([userRole.id], null, trx) //Set role in the user
+      await trx.commit() //Commit the transation
+      return response.status(201).send({ data: user })
+    } catch (error) {
+      await trx.rollback()
+      return response.status(400).send({ message: 'Erro ao tentar cadastrar usuário' })
+    }
   }
 
   /**
@@ -40,7 +105,14 @@ class UserController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show ({ params, request, response, view }) {
+  async show({ params, request, response, view }) {
+    try {
+      const id = request.input('id')
+      const user = await User.findOrFail(id)
+      return response.send({ success: true, data: user })
+    } catch (error) {
+      return response.send({ success: false, message: 'Falha ao tentar buscar usuário' })
+    }
   }
 
   /**
@@ -51,7 +123,55 @@ class UserController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update ({ params, request, response }) {
+  async update({ params, request, response }) {
+    try {
+      const {
+        id,
+        first_name,
+        last_name,
+        email,
+        password,
+        birth_date,
+        gender,
+        document,
+        phone,
+        zip_code,
+        address_street,
+        address_number,
+        address_neighborhood,
+        address_complement,
+        address_reference,
+        address_city,
+        address_state,
+        //image_id
+      } = request.all()
+
+      const user = await User.findOrFail(id)
+      user.merge({
+        first_name,
+        last_name,
+        email,
+        password,
+        birth_date,
+        gender,
+        document,
+        phone,
+        zip_code,
+        address_street,
+        address_number,
+        address_neighborhood,
+        address_complement,
+        address_reference,
+        address_city,
+        address_state,
+        //image_id
+      })
+
+      await user.save()
+      return response.send({ success: true, data: user })
+    } catch (error) {
+      return response.send({ success: false, message: 'Falha ao tentar atualizar usuário' })
+    }
   }
 
   /**
@@ -62,7 +182,15 @@ class UserController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy ({ params, request, response }) {
+  async destroy({ params, request, response }) {
+    try {
+      const id = request.input('id')
+      const user = await User.findOrFail(id)
+      await user.delete()
+      return response.send({ success: true })
+    } catch (error) {
+      return response.status(500).send({ success: false, message: 'Falha ao tentar deletar usuário' })
+    }
   }
 }
 

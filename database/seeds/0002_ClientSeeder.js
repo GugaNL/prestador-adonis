@@ -33,7 +33,7 @@ class ClientSeeder {
       first_name: 'Gustavo',
       last_name: 'Lucena',
       email: 'gustavonuneslucena@hotmail.com',
-      password: 'secret'
+      password: '123456'
     })
 
     //Percorre o array de user criado e associa a sua role admin (RoleSeeder)

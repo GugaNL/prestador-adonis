@@ -25,7 +25,7 @@ class Provider extends Model {
      * A relationship on tokens is required for auth to work
      */
     tokens() {
-        return this.hasMany('App/Models/Token')
+        return this.hasMany('App/Models/TokenProvider')
     }
 
     /**

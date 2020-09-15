@@ -3,6 +3,7 @@
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
+const Service = use('App/Models/Service')
 
 /**
  * Resourceful controller for interacting with services
@@ -17,7 +18,18 @@ class ServiceController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index ({ request, response, view }) {
+  async index({ request, response, view, pagination }) {
+    try {
+      const name = request.input('name')
+      const query = Service.query()
+      if (name) {
+        query.where('name', 'LIKE', `%${name}%`)
+      }
+      const services = await query.paginate(pagination.page, pagination.limit)
+      return response.send({ success: true, data: services })
+    } catch (error) {
+      return response.send({ success: false, message: 'Falha ao tentar listar serviços' })
+    }
   }
 
   /**
@@ -28,7 +40,14 @@ class ServiceController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store ({ request, response }) {
+  async store({ request, response }) {
+    try {
+      const { name, description, value, initial_datetime, final_datetime, status, category_id, user_id, provider_id } = request.all()
+      const service = await Service.create({ name, description, value, initial_datetime, final_datetime, status, category_id, user_id, provider_id })
+      return response.status(201).send({ success: true, data: service })
+    } catch (error) {
+      return response.status(400).send({ success: false, message: 'Erro ao tentar cadastrar serviço' })
+    }
   }
 
   /**
@@ -40,7 +59,14 @@ class ServiceController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show ({ params, request, response, view }) {
+  async show({ params, request, response, view }) {
+    try {
+      const id = request.input('id')
+      const service = await Service.findOrFail(id)
+      return response.send({ success: true, data: service })
+    } catch (error) {
+      return response.send({ success: false, message: 'Falha ao tentar exibir serviço' })
+    }
   }
 
   /**
@@ -51,7 +77,16 @@ class ServiceController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update ({ params, request, response }) {
+  async update({ params, request, response }) {
+    try {
+      const { id, name, description, value, initial_datetime, final_datetime, status, category_id, user_id, provider_id } = request.all()
+      const service = await Service.findOrFail(id)
+      service.merge({ name, description, value, initial_datetime, final_datetime, status, category_id, user_id, provider_id })
+      await service.save()
+      return response.send({ success: true, data: service })
+    } catch (error) {
+      return response.send({ success: false, message: 'Falha ao tentar atualizar serviço' })
+    }
   }
 
   /**
@@ -62,7 +97,15 @@ class ServiceController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy ({ params, request, response }) {
+  async destroy({ params, request, response }) {
+    try {
+      const id = request.input('id')
+      const service = await Service.findOrFail(id)
+      await service.delete()
+      return response.send({ success: true })
+    } catch (error) {
+      return response.status(500).send({ success: false, message: 'Falha ao tentar deletar serviço' })
+    }
   }
 }
 
