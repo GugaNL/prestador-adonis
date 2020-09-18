@@ -3,6 +3,10 @@
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
+const Image = use('App/Models/Image')
+const { manage_single_upload, manage_multiple_upload }
+const Helpers = use('Helpers')
+const fs = use('fs')
 
 /**
  * Resourceful controller for interacting with images
@@ -17,7 +21,13 @@ class ImageController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index ({ request, response, view }) {
+  async index({ request, response, pagination }) {
+    try {
+      const images = await Image.query().orderBy('id', 'DESC').paginate(pagination.page, pagination.limit)
+      return response.send({ success: true, data: images })
+    } catch (error) {
+      return response.send({ success: false, message: 'Falha ao tentar listar imagens' })
+    }
   }
 
   /**
@@ -28,7 +38,55 @@ class ImageController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store ({ request, response }) {
+  async store({ request, response }) {
+    try {
+      //Capture a single or multiple image of the request
+      const fileJar = request.file('images', {
+        types: ['image'],
+        size: '2mb'
+      })
+
+      let images = []
+
+
+      if (!fileJar.files) { //If a single file
+
+        const file = await manage_single_upload(fileJar)
+        if (file.moved()) {
+          const image = await Image.create({
+            path: file.fileName,
+            size: file.size,
+            original_name: file.clientName,
+            extension: file.subtype
+          })
+
+          images.push(image) //Add the saved image in the array that will return response
+          return response.status(201).send({ successes: images, errors: {} })
+        } else {
+          return response.status(400).send({ success: false, message: 'Falha ao processar a imagem' })
+        }
+
+      } else { //If multiple files
+
+        let files = await manage_multiple_upload(fileJar)
+        await Promise.all(
+          files.successes.map(async file => {
+            const image = await Image.create({
+              path: file.fileName,
+              size: file.size,
+              original_name: file.clientName,
+              extension: file.subtype
+            })
+            images.push(image)
+          })
+        )
+        return response.status(201).send({ successes: images, errors: files.errors })
+
+      }
+
+    } catch (error) {
+      return response.status(400).send({ success: false, message: 'Falha ao processar a solicitação' })
+    }
   }
 
   /**
@@ -40,7 +98,14 @@ class ImageController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show ({ params, request, response, view }) {
+  async show({ params, request, response, view }) {
+    try {
+      const id = request.input('id')
+      const image = await Image.findOrFail(id)
+      return response.send({ success: true, data: image })
+    } catch (error) {
+      return response.send({ success: false, message: 'Falha ao tentar exibir a imagem' })
+    }
   }
 
   /**
@@ -51,7 +116,16 @@ class ImageController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update ({ params, request, response }) {
+  async update({ params, request, response }) {
+    try {
+      const { id, original_name } = request.all()
+      const image = await Image.findOrFail(id)
+      image.merge({ original_name })
+      await image.save()
+      return response.send({ success: true, data: image })
+    } catch (error) {
+      return response.send({ success: false, message: 'Falha ao atualizar imagem' })
+    }
   }
 
   /**
@@ -62,7 +136,20 @@ class ImageController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy ({ params, request, response }) {
+  async destroy({ params, request, response }) {
+    try {
+      const id = request.input('id')
+      const image = await Image.findOrFail(id)
+      let filePath = Helpers.publicPath(`uploads/${image.path}`) //Take the file
+      await fs.unlink(filePath, err => {
+        if (!err) {
+          image.delete()
+        }
+      })
+      return response.status(204).send({ success: true })
+    } catch (error) {
+      return response.send({ success: false, message: 'Falha ao tentar deletar a imagem' })
+    }
   }
 }
 

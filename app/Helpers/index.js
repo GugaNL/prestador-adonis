@@ -56,7 +56,7 @@ const manage_single_upload = async (file, path = null) => {
 const manage_multiple_upload = async (filejar, path = null) => {
     path = path ? path : Helpers.publicPath('uploads') // If params path dont passed then set to public/uploads
 
-    let success = [], errors = []
+    let successes = [], errors = []
 
     await Promise.all(filejar.files.map(async file => {
         //Generate a random name
@@ -64,16 +64,16 @@ const manage_multiple_upload = async (filejar, path = null) => {
         let filename = `${new Date().getTime()}-${random_name}.${file.subtype}` //generate a name for use and save in a variable
         await file.move(path, { name: filename })
 
-        //Check if really was moved
+        //Check if really was moved for push in the array
         if (file.moved()) {
-            success.push(file)
+            successes.push(file)
         } else {
             errors.push(file.error())
         }
 
     }))
 
-    return { success, errors }
+    return { successes, errors }
 }
 
 
