@@ -131,17 +131,8 @@ class AuthController {
      */
     async loginUser({ request, response, auth }) {
         const { email, password } = request.all()
-
-        try {
-            let jsonToken = await auth.authenticator('user').attempt(email, password)
-            let user = await User.findBy('email', email)
-            user.merge({ token: jsonToken.token })
-            user.save()
-            return response.send({ success: true, data: user })
-        } catch (error) {
-            return response.send({ success: false, message: 'Email não encontrado'})
-        }
-
+        let data = await auth.authenticator('user').withRefreshToken().attempt(email, password)
+        return response.send({ data })
     }
 
 
@@ -150,18 +141,8 @@ class AuthController {
      */
     async loginProvider({ request, response, auth }) {
         const { email, password } = request.all()
-
-        try {
-            let jsonToken = await auth.authenticator('provider').attempt(email, password)
-            let provider = await Provider.findBy('email', email)
-            provider.merge({ token: jsonToken.token })
-            provider.save()
-            return response.send({ success: true, data: provider })
-        } catch (error) {
-            console.log(error)
-            return response.send({ success: false, message: 'Email não encontrado'})
-        }
-
+        const data = await auth.authenticator('provider').withRefreshToken().attempt(email, password)
+        return response.send({ data })
     }
 
 
