@@ -131,8 +131,47 @@ class AuthController {
      */
     async loginUser({ request, response, auth }) {
         const { email, password } = request.all()
-        let data = await auth.authenticator('user').withRefreshToken().attempt(email, password)
-        return response.send({ data })
+
+        try {
+            if (await auth.authenticator('user').attempt(email, password)) {
+                let user = await User.findBy('email', email)
+                let generatedToken = await auth.authenticator('user').withRefreshToken().generate(user)
+                return response.send({ generatedToken })
+            }
+        } catch (error) {
+            return response.send({ success: false, message: 'Erro ao tentar logar' })
+        }
+        //let data = await auth.authenticator('user').withRefreshToken().attempt(email, password)
+    }
+
+
+    /**
+     * Logout user
+     */
+    async logoutUser({ request, response, auth }) {
+        let refresh_token = request.input('refresh_token')
+
+        if (!refresh_token) { //If don't exists token in the body then take in the header 
+            refresh_token = request.header('refresh_token')
+        }
+
+        await auth.authenticator('user').revokeTokens([refresh_token], true) //Dont working (need delete the token registry in the database)
+        return response.status(204).send({ success: true, message: 'Deslogado com sucesso' })
+    }
+
+
+    /**
+    * Refresh user token
+    */
+    async refreshUser({ request, response, auth }) {
+        let refresh_token = request.input('refresh_token')
+
+        if (!refresh_token) { //If don't exists token in the body then take in the header 
+            refresh_token = request.header('refresh_token')
+        }
+
+        const user = await auth.authenticator('user').newRefreshToken().generateForRefreshToken(refresh_token) //Generate a new token for variable refresh_token
+        return response.send({ data: user })
     }
 
 
@@ -143,21 +182,6 @@ class AuthController {
         const { email, password } = request.all()
         const data = await auth.authenticator('provider').withRefreshToken().attempt(email, password)
         return response.send({ data })
-    }
-
-
-    /**
-     * Refresh user token
-     */
-    async refreshUser({ request, response, auth }) {
-        let refresh_token = request.input('refresh_token')
-
-        if (!refresh_token) { //If don't exists token in the body then take in the header 
-            refresh_token = request.header('refresh_token')
-        }
-
-        const user = await auth.authenticator('user').newRefreshToken().generateForRefreshToken(refresh_token) //Generate a new token for variable refresh_token
-        return response.send({ data: user })
     }
 
 
@@ -177,24 +201,6 @@ class AuthController {
 
 
     /**
-     * Logout user
-     */
-    async logoutUser({ request, response, auth }) {
-        let refresh_token = request.input('refresh_token')
-
-        if (!refresh_token) { //If don't exists token in the body then take in the header 
-            refresh_token = request.header('refresh_token')
-        }
-
-        //await auth.authenticator('provider').revokeTokens(['refresh_token'], true) //Dont working (need delete the token registry in the database)
-        const decryptedToken = Encryption.decrypt(refresh_token)
-        await Token.query().where('token', decryptedToken).delete()
-        return response.status(204).send({ })
-
-    }
-
-
-    /**
      * Logout provider
      */
     async logoutProvider({ request, response, auth }) {
@@ -204,10 +210,10 @@ class AuthController {
             refresh_token = request.header('refresh_token')
         }
 
-        //await auth.authenticator('provider').revokeTokens(['refresh_token'], true) //Dont working (need delete the token registry in the database)
-        const decryptedToken = Encryption.decrypt(refresh_token)
-        await TokenProvider.query().where('token', decryptedToken).delete()
-        return response.status(204).send({ })
+        await auth.authenticator('provider').revokeTokens([refresh_token], true) //Dont working (need delete the token registry in the database)
+        //const decryptedToken = Encryption.decrypt(refresh_token)
+        //await TokenProvider.query().where('token', decryptedToken).delete()
+        return response.status(204).send({})
     }
 
 

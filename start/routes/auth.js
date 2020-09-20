@@ -21,7 +21,7 @@ Route.group(() => {
 
     Route.post('logout_user', 'AuthController.logoutUser')
         .as('auth.logout_user')
-        //.middleware(['auth']) //auth means that need be logged to execute
+        .middleware(['auth']) //auth means that need be logged to execute
 
     //For provider
     Route.post('register_provider', 'AuthController.registerProvider')
