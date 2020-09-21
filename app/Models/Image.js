@@ -18,7 +18,7 @@ class Image extends Model {
      * Necessary to get the relative path of the image
      */
     getUrl({ path }) { //Destruction equivalent to modelInstance path
-        return `${Env.get('APP_URL')}/images/${path}` //The relative path
+        return `${Env.get('APP_URL')}/uploads/${path}` //The relative path
     }
     
 }

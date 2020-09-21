@@ -3,6 +3,8 @@
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
+const Service = use('App/Models/Service')
+const Transformer = use('App/Transformer/Admin/ServiceTransformer')
 
 /**
  * Resourceful controller for interacting with services
@@ -17,7 +19,19 @@ class ServiceController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index ({ request, response, view }) {
+  async index({ request, response, view, pagination, transform }) {
+    try {
+      const name = request.input('name')
+      const query = Service.query()
+      if (name) {
+        query.where('name', 'LIKE', `%${name}%`)
+      }
+      var services = await query.paginate(pagination.page, pagination.limit)
+      services = await transform.paginate(services, Transformer)
+      return response.send({ success: true, data: services })
+    } catch (error) {
+      return response.send({ success: false, message: 'Falha ao tentar listar serviços' })
+    }
   }
 
   /**
@@ -40,7 +54,15 @@ class ServiceController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show ({ params, request, response, view }) {
+  async show({ params, request, response, view, transform }) {
+    try {
+      const id = request.input('id')
+      var service = await Service.findOrFail(id)
+      service = await transform.item(service, Transformer)
+      return response.send({ success: true, data: service })
+    } catch (error) {
+      return response.send({ success: false, message: 'Falha ao tentar exibir serviço' })
+    }
   }
 
   /**

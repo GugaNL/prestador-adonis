@@ -7,6 +7,7 @@ const Image = use('App/Models/Image')
 const { manage_single_upload, manage_multiple_upload }
 const Helpers = use('Helpers')
 const fs = use('fs')
+const Transformer = use('App/Transformers/Admin/ImageTransformer')
 
 /**
  * Resourceful controller for interacting with images
@@ -21,9 +22,10 @@ class ImageController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index({ request, response, pagination }) {
+  async index({ request, response, pagination, transform }) {
     try {
-      const images = await Image.query().orderBy('id', 'DESC').paginate(pagination.page, pagination.limit)
+      var images = await Image.query().orderBy('id', 'DESC').paginate(pagination.page, pagination.limit)
+      images = await transform.paginate(images, Transformer)
       return response.send({ success: true, data: images })
     } catch (error) {
       return response.send({ success: false, message: 'Falha ao tentar listar imagens' })
@@ -38,7 +40,7 @@ class ImageController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store({ request, response }) {
+  async store({ request, response, transform }) {
     try {
       //Capture a single or multiple image of the request
       const fileJar = request.file('images', {
@@ -53,14 +55,14 @@ class ImageController {
 
         const file = await manage_single_upload(fileJar)
         if (file.moved()) {
-          const image = await Image.create({
+          var image = await Image.create({
             path: file.fileName,
             size: file.size,
             original_name: file.clientName,
             extension: file.subtype
           })
-
-          images.push(image) //Add the saved image in the array that will return response
+          image = await transform.item(image, Transformer)
+          images.push(transformedImage) //Add the saved image in the array that will return response
           return response.status(201).send({ successes: images, errors: {} })
         } else {
           return response.status(400).send({ success: false, message: 'Falha ao processar a imagem' })
@@ -71,12 +73,13 @@ class ImageController {
         let files = await manage_multiple_upload(fileJar)
         await Promise.all(
           files.successes.map(async file => {
-            const image = await Image.create({
+            var image = await Image.create({
               path: file.fileName,
               size: file.size,
               original_name: file.clientName,
               extension: file.subtype
             })
+            image = await transform.item(image, Transformer)
             images.push(image)
           })
         )
@@ -98,10 +101,11 @@ class ImageController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show({ params, request, response, view }) {
+  async show({ params, request, response, view, transform }) {
     try {
       const id = request.input('id')
-      const image = await Image.findOrFail(id)
+      var image = await Image.findOrFail(id)
+      image = await transform.item(image, Transformer)
       return response.send({ success: true, data: image })
     } catch (error) {
       return response.send({ success: false, message: 'Falha ao tentar exibir a imagem' })
@@ -116,12 +120,13 @@ class ImageController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update({ params, request, response }) {
+  async update({ params, request, response, transform }) {
     try {
       const { id, original_name } = request.all()
-      const image = await Image.findOrFail(id)
+      var image = await Image.findOrFail(id)
       image.merge({ original_name })
       await image.save()
+      image = await transform.item(image, Transformer)
       return response.send({ success: true, data: image })
     } catch (error) {
       return response.send({ success: false, message: 'Falha ao atualizar imagem' })
