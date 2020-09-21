@@ -5,7 +5,7 @@ module.exports = {
    * When enabled, Bulblebee will automatically parse the ?include=
    * parameter and include all requested resources
    */
-  parseRequest: false,
+  parseRequest: true, //true means we can pass a include object in the request (Ex.: return entire user data in show_service)
 
   /*
    * Nested includes will be resolved up to this limit any further nested
