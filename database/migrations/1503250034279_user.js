@@ -4,7 +4,7 @@
 const Schema = use('Schema')
 
 class UserSchema extends Schema {
-  up () {
+  up() {
     this.create('users', (table) => {
       table.increments()
       table.string('first_name', 80)
@@ -25,13 +25,14 @@ class UserSchema extends Schema {
       table.string('address_city', 100)
       table.string('address_state', 100)
       table.integer('image_id').unsigned()
+      table.enu('status', ['approved', 'pending', 'rejected'])
       table.timestamps()
 
       table.foreign('image_id').references('id').inTable('images').onDelete('cascade')
     })
   }
 
-  down () {
+  down() {
     this.drop('users')
   }
 }

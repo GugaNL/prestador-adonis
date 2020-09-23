@@ -25,6 +25,7 @@ class ProviderSchema extends Schema {
       table.string('address_city', 100)
       table.string('address_state', 100)
       table.integer('image_id').unsigned()
+      table.enu('status', ['approved', 'pending', 'rejected'])
       table.integer('category_id').unsigned()
 
       table.foreign('image_id').references('id').inTable('images').onDelete('cascade')
