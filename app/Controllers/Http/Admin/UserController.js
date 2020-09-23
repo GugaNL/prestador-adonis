@@ -26,17 +26,22 @@ class UserController {
     let user = await User.findOrFail(id)
 
     if (user.token == token) {
-      try {
-        const query = User.query()
-        if (name) {
-          query.where('first_name', 'LIKE', `%${name}%`)
-          query.orWhere('last_name', 'LIKE', `%${name}%`)
-          query.orWhere('email', 'LIKE', `%${name}%`)
+      const roles = await user.getRoles() //Take the role for validate
+      if (roles.includes('admin', 'manager')) {
+        try {
+          const query = User.query()
+          if (name) {
+            query.where('first_name', 'LIKE', `%${name}%`)
+            query.orWhere('last_name', 'LIKE', `%${name}%`)
+            query.orWhere('email', 'LIKE', `%${name}%`)
+          }
+          const users = await query.paginate(pagination.page, pagination.limit)
+          return response.send({ success: true, data: users })
+        } catch (error) {
+          return response.send({ success: false, message: 'Falha ao tentar listar usuários' })
         }
-        const users = await query.paginate(pagination.page, pagination.limit)
-        return response.send({ success: true, data: users })
-      } catch (error) {
-        return response.send({ success: false, message: 'Falha ao tentar listar usuários' })
+      } else {
+        return response.send({ success: false, message: 'Você não tem permissão' })
       }
     } else {
       return response.send({ success: false, message: 'Falha na autenticação' })

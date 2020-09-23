@@ -4,8 +4,8 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 const Category = use('App/Models/Category')
-const Transformer = use('App/Transformers/Admin/CategoryTransformer')
 const User = use('App/Models/User')
+const Transformer = use('App/Transformers/Admin/CategoryTransformer')
 
 /**
  * Resourceful controller for interacting with categories
@@ -58,12 +58,17 @@ class CategoryController {
     const { id, token, name, description, image_id } = request.all() //Using destruction take the parameters sended
     let user = await User.findOrFail(id)
     if (user.token == token) {
-      try {
-        var category = await Category.create({ name, description, image_id })
-        category = await transform.item(category, Transformer) //item because is just a one item, not a array in paginate
-        return response.status(201).send({ success: true, data: category })
-      } catch (error) {
-        return response.status(400).send({ success: false, message: 'Erro ao tentar cadastrar categoria' })
+      const roles = await user.getRoles() //Take the role for validate
+      if (roles.includes('admin', 'manager')) {
+        try {
+          var category = await Category.create({ name, description, image_id })
+          category = await transform.item(category, Transformer) //item because is just a one item, not a array in paginate
+          return response.status(201).send({ success: true, data: category })
+        } catch (error) {
+          return response.status(400).send({ success: false, message: 'Erro ao tentar cadastrar categoria' })
+        }
+      } else {
+        return response.send({ success: false, message: 'Você não tem permissão' })
       }
     } else {
       return response.send({ success: false, message: 'Falha na autenticação' })
@@ -108,14 +113,19 @@ class CategoryController {
     const { id, token, category_id, name, description, image_id } = request.all()
     let user = await User.findOrFail(id)
     if (user.token == token) {
-      try {
-        var category = await Category.findOrFail(category_id)
-        category.merge({ name, description, image_id })
-        await category.save()
-        category = await transform.item(category, Transformer) //item because is just a one item, not a array in paginate
-        return response.send({ success: true, data: category })
-      } catch (error) {
-        return response.send({ success: false, message: 'Falha ao tentar atualizar categoria' })
+      const roles = await user.getRoles() //Take the role for validate
+      if (roles.includes('admin', 'manager')) {
+        try {
+          var category = await Category.findOrFail(category_id)
+          category.merge({ name, description, image_id })
+          await category.save()
+          category = await transform.item(category, Transformer) //item because is just a one item, not a array in paginate
+          return response.send({ success: true, data: category })
+        } catch (error) {
+          return response.send({ success: false, message: 'Falha ao tentar atualizar categoria' })
+        }
+      } else {
+        return response.send({ success: false, message: 'Você não tem permissão' })
       }
     } else {
       return response.send({ success: false, message: 'Falha na autenticação' })
@@ -134,12 +144,17 @@ class CategoryController {
     const { id, token, category_id } = request.all()
     let user = await User.findOrFail(id)
     if (user.token == token) {
-      try {
-        const category = await Category.findOrFail(category_id)
-        await category.delete()
-        return response.send({ success: true })
-      } catch (error) {
-        return response.status(500).send({ success: false, message: 'Falha ao tentar deletar categoria' })
+      const roles = await user.getRoles() //Take the role for validate
+      if (roles.includes('admin', 'manager')) {
+        try {
+          const category = await Category.findOrFail(category_id)
+          await category.delete()
+          return response.send({ success: true })
+        } catch (error) {
+          return response.status(500).send({ success: false, message: 'Falha ao tentar deletar categoria' })
+        }
+      } else {
+        return response.send({ success: false, message: 'Você não tem permissão' })
       }
     } else {
       return response.send({ success: false, message: 'Falha na autenticação' })

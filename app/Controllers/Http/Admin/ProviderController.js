@@ -26,19 +26,23 @@ class ProviderController {
     const user = await User.findOrFail(id)
 
     if (user.token == token) {
-      try {
-        const query = Provider.query()
+      const roles = await user.getRoles() //Take the role for validate
+      if (roles.includes('admin', 'manager')) {
+        try {
+          const query = Provider.query()
 
-        if (firstName) {
-          query.where('first_name', 'LIKE', `%${firstName}%`)
+          if (firstName) {
+            query.where('first_name', 'LIKE', `%${firstName}%`)
+          }
+
+          const providers = await query.paginate(pagination.page, pagination.limit)
+          return response.send({ success: true, data: providers })
+        } catch (error) {
+          return response.send({ success: false, message: 'Falha ao tentar listar prestadores' })
         }
-
-        const providers = await query.paginate(pagination.page, pagination.limit)
-        return response.send({ success: true, data: providers })
-      } catch (error) {
-        return response.send({ success: false, message: 'Erro ao tentar listar prestadores' })
+      } else {
+        return response.send({ success: false, message: 'Você não tem permissão' })
       }
-
     } else {
       return response.send({ success: false, message: 'Falha na autenticação' })
     }

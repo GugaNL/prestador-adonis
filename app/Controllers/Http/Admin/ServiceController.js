@@ -4,8 +4,8 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 const Service = use('App/Models/Service')
-const Transformer = use('App/Transformer/Admin/ServiceTransformer')
 const User = use('App/Models/User')
+const Transformer = use('App/Transformer/Admin/ServiceTransformer')
 
 /**
  * Resourceful controller for interacting with services
@@ -25,16 +25,21 @@ class ServiceController {
     let user = await User.findOrFail(id)
 
     if (user.token == token) {
-      try {
-        const query = Service.query()
-        if (name) {
-          query.where('name', 'LIKE', `%${name}%`)
+      const roles = await user.getRoles() //Take the role for validate
+      if (roles.includes('admin', 'manager')) {
+        try {
+          const query = Service.query()
+          if (name) {
+            query.where('name', 'LIKE', `%${name}%`)
+          }
+          var services = await query.paginate(pagination.page, pagination.limit)
+          services = await transform.paginate(services, Transformer)
+          return response.send({ success: true, data: services })
+        } catch (error) {
+          return response.send({ success: false, message: 'Falha ao tentar listar serviços' })
         }
-        var services = await query.paginate(pagination.page, pagination.limit)
-        services = await transform.paginate(services, Transformer)
-        return response.send({ success: true, data: services })
-      } catch (error) {
-        return response.send({ success: false, message: 'Falha ao tentar listar serviços' })
+      } else {
+        return response.send({ success: false, message: 'Você não tem permissão' })
       }
     } else {
       return response.send({ success: false, message: 'Falha na autenticação' })
@@ -54,12 +59,17 @@ class ServiceController {
     let user = await User.findOrFail(id)
 
     if (user.token == token) {
-      try {
-        var service = await Service.create({ name, description, value, initial_datetime, final_datetime, status, category_id, user_id, provider_id })
-        service = await transform.item(service, Transformer)
-        return response.status(201).send({ success: true, data: service })
-      } catch (error) {
-        return response.status(400).send({ success: false, message: 'Erro ao tentar cadastrar serviço' })
+      const roles = await user.getRoles() //Take the role for validate
+      if (roles.includes('admin', 'manager')) {
+        try {
+          var service = await Service.create({ name, description, value, initial_datetime, final_datetime, status, category_id, user_id, provider_id })
+          service = await transform.item(service, Transformer)
+          return response.status(201).send({ success: true, data: service })
+        } catch (error) {
+          return response.status(400).send({ success: false, message: 'Erro ao tentar cadastrar serviço' })
+        }
+      } else {
+        return response.send({ success: false, message: 'Você não tem permissão' })
       }
     } else {
       return response.send({ success: false, message: 'Falha na autenticação' })
@@ -80,12 +90,17 @@ class ServiceController {
     let user = await User.findOrFail(id)
 
     if (user.token == token) {
-      try {
-        var service = await Service.findOrFail(service_id)
-        service = await transform.item(service, Transformer)
-        return response.send({ success: true, data: service })
-      } catch (error) {
-        return response.send({ success: false, message: 'Falha ao tentar exibir serviço' })
+      const roles = await user.getRoles() //Take the role for validate
+      if (roles.includes('admin', 'manager')) {
+        try {
+          var service = await Service.findOrFail(service_id)
+          service = await transform.item(service, Transformer)
+          return response.send({ success: true, data: service })
+        } catch (error) {
+          return response.send({ success: false, message: 'Falha ao tentar exibir serviço' })
+        }
+      } else {
+        return response.send({ success: false, message: 'Você não tem permissão' })
       }
     } else {
       return response.send({ success: false, message: 'Falha na autenticação' })
@@ -105,14 +120,19 @@ class ServiceController {
     let user = await User.findOrFail(id)
 
     if (user.token == token) {
-      try {
-        var service = await Service.findOrFail(service_id)
-        service.merge({ name, description, value, initial_datetime, final_datetime, status, category_id, user_id, provider_id })
-        await service.save()
-        service = await transform.item(service, Transformer)
-        return response.send({ success: true, data: service })
-      } catch (error) {
-        return response.send({ success: false, message: 'Falha ao tentar atualizar serviço' })
+      const roles = await user.getRoles() //Take the role for validate
+      if (roles.includes('admin', 'manager')) {
+        try {
+          var service = await Service.findOrFail(service_id)
+          service.merge({ name, description, value, initial_datetime, final_datetime, status, category_id, user_id, provider_id })
+          await service.save()
+          service = await transform.item(service, Transformer)
+          return response.send({ success: true, data: service })
+        } catch (error) {
+          return response.send({ success: false, message: 'Falha ao tentar atualizar serviço' })
+        }
+      } else {
+        return response.send({ success: false, message: 'Você não tem permissão' })
       }
     } else {
       return response.send({ success: false, message: 'Falha na autenticação' })
@@ -132,12 +152,17 @@ class ServiceController {
     let user = await User.findOrFail(id)
 
     if (user.token == token) {
-      try {
-        const service = await Service.findOrFail(service_id)
-        await service.delete()
-        return response.send({ success: true })
-      } catch (error) {
-        return response.status(500).send({ success: false, message: 'Falha ao tentar deletar serviço' })
+      const roles = await user.getRoles() //Take the role for validate
+      if (roles.includes('admin', 'manager')) {
+        try {
+          const service = await Service.findOrFail(service_id)
+          await service.delete()
+          return response.send({ success: true })
+        } catch (error) {
+          return response.status(500).send({ success: false, message: 'Falha ao tentar deletar serviço' })
+        }
+      } else {
+        return response.send({ success: false, message: 'Você não tem permissão' })
       }
     } else {
       return response.send({ success: false, message: 'Falha na autenticação' })
