@@ -5,6 +5,7 @@
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 const Service = use('App/Models/Service')
 const Transformer = use('App/Transformer/Admin/ServiceTransformer')
+const User = use('App/Models/User')
 
 /**
  * Resourceful controller for interacting with services
@@ -19,18 +20,24 @@ class ServiceController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index({ request, response, view, pagination, transform }) {
-    try {
-      const name = request.input('name')
-      const query = Service.query()
-      if (name) {
-        query.where('name', 'LIKE', `%${name}%`)
+  async index({ request, response, pagination, transform }) {
+    const { id, token, name } = request.all()
+    let user = await User.findOrFail(id)
+
+    if (user.token == token) {
+      try {
+        const query = Service.query()
+        if (name) {
+          query.where('name', 'LIKE', `%${name}%`)
+        }
+        var services = await query.paginate(pagination.page, pagination.limit)
+        services = await transform.paginate(services, Transformer)
+        return response.send({ success: true, data: services })
+      } catch (error) {
+        return response.send({ success: false, message: 'Falha ao tentar listar serviços' })
       }
-      var services = await query.paginate(pagination.page, pagination.limit)
-      services = await transform.paginate(services, Transformer)
-      return response.send({ success: true, data: services })
-    } catch (error) {
-      return response.send({ success: false, message: 'Falha ao tentar listar serviços' })
+    } else {
+      return response.send({ success: false, message: 'Falha na autenticação' })
     }
   }
 
@@ -43,13 +50,19 @@ class ServiceController {
    * @param {Response} ctx.response
    */
   async store({ request, response, transform }) {
-    try {
-      const { name, description, value, initial_datetime, final_datetime, status, category_id, user_id, provider_id } = request.all()
-      var service = await Service.create({ name, description, value, initial_datetime, final_datetime, status, category_id, user_id, provider_id })
-      service = await transform.item(service, Transformer)
-      return response.status(201).send({ success: true, data: service })
-    } catch (error) {
-      return response.status(400).send({ success: false, message: 'Erro ao tentar cadastrar serviço' })
+    const { id, token, name, description, value, initial_datetime, final_datetime, status, category_id, user_id, provider_id } = request.all()
+    let user = await User.findOrFail(id)
+
+    if (user.token == token) {
+      try {
+        var service = await Service.create({ name, description, value, initial_datetime, final_datetime, status, category_id, user_id, provider_id })
+        service = await transform.item(service, Transformer)
+        return response.status(201).send({ success: true, data: service })
+      } catch (error) {
+        return response.status(400).send({ success: false, message: 'Erro ao tentar cadastrar serviço' })
+      }
+    } else {
+      return response.send({ success: false, message: 'Falha na autenticação' })
     }
   }
 
@@ -62,14 +75,20 @@ class ServiceController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show({ params, request, response, view, transform }) {
-    try {
-      const id = request.input('id')
-      var service = await Service.findOrFail(id)
-      service = await transform.item(service, Transformer)
-      return response.send({ success: true, data: service })
-    } catch (error) {
-      return response.send({ success: false, message: 'Falha ao tentar exibir serviço' })
+  async show({ params, request, response, transform }) {
+    const { id, token, service_id } = request.all()
+    let user = await User.findOrFail(id)
+
+    if (user.token == token) {
+      try {
+        var service = await Service.findOrFail(service_id)
+        service = await transform.item(service, Transformer)
+        return response.send({ success: true, data: service })
+      } catch (error) {
+        return response.send({ success: false, message: 'Falha ao tentar exibir serviço' })
+      }
+    } else {
+      return response.send({ success: false, message: 'Falha na autenticação' })
     }
   }
 
@@ -82,15 +101,21 @@ class ServiceController {
    * @param {Response} ctx.response
    */
   async update({ params, request, response, transform }) {
-    try {
-      const { id, name, description, value, initial_datetime, final_datetime, status, category_id, user_id, provider_id } = request.all()
-      var service = await Service.findOrFail(id)
-      service.merge({ name, description, value, initial_datetime, final_datetime, status, category_id, user_id, provider_id })
-      await service.save()
-      service = await transform.item(service, Transformer)
-      return response.send({ success: true, data: service })
-    } catch (error) {
-      return response.send({ success: false, message: 'Falha ao tentar atualizar serviço' })
+    const { id, token, service_id, name, description, value, initial_datetime, final_datetime, status, category_id, user_id, provider_id } = request.all()
+    let user = await User.findOrFail(id)
+
+    if (user.token == token) {
+      try {
+        var service = await Service.findOrFail(service_id)
+        service.merge({ name, description, value, initial_datetime, final_datetime, status, category_id, user_id, provider_id })
+        await service.save()
+        service = await transform.item(service, Transformer)
+        return response.send({ success: true, data: service })
+      } catch (error) {
+        return response.send({ success: false, message: 'Falha ao tentar atualizar serviço' })
+      }
+    } else {
+      return response.send({ success: false, message: 'Falha na autenticação' })
     }
   }
 
@@ -103,13 +128,19 @@ class ServiceController {
    * @param {Response} ctx.response
    */
   async destroy({ params, request, response }) {
-    try {
-      const id = request.input('id')
-      const service = await Service.findOrFail(id)
-      await service.delete()
-      return response.send({ success: true })
-    } catch (error) {
-      return response.status(500).send({ success: false, message: 'Falha ao tentar deletar serviço' })
+    const { id, token, service_id } = request.all()
+    let user = await User.findOrFail(id)
+
+    if (user.token == token) {
+      try {
+        const service = await Service.findOrFail(service_id)
+        await service.delete()
+        return response.send({ success: true })
+      } catch (error) {
+        return response.status(500).send({ success: false, message: 'Falha ao tentar deletar serviço' })
+      }
+    } else {
+      return response.send({ success: false, message: 'Falha na autenticação' })
     }
   }
 }

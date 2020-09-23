@@ -4,6 +4,7 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 const Provider = use('App/Models/Provider')
+const User = use('App/Models/User')
 const Database = use('Database')
 const Role = use('Role')
 
@@ -20,21 +21,27 @@ class ProviderController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index({ request, response, view, pagination }) {
-    try {
-      const firstName = request.input('first_name')
-      const query = Provider.query()
+  async index({ request, response, pagination }) {
+    const { id, token, firstName } = request.all()
+    const user = await User.findOrFail(id)
 
-      if (firstName) {
-        query.where('first_name', 'LIKE', `%${firstName}%`)
+    if (user.token == token) {
+      try {
+        const query = Provider.query()
+
+        if (firstName) {
+          query.where('first_name', 'LIKE', `%${firstName}%`)
+        }
+
+        const providers = await query.paginate(pagination.page, pagination.limit)
+        return response.send({ success: true, data: providers })
+      } catch (error) {
+        return response.send({ success: false, message: 'Erro ao tentar listar prestadores' })
       }
 
-      const providers = await query.paginate(pagination.page, pagination.limit)
-      return response.send({ success: true, data: providers })
-    } catch (error) {
-      return response.send({ success: false, message: 'Erro ao tentar listar prestadores' })
+    } else {
+      return response.send({ success: false, message: 'Falha na autenticação' })
     }
-
   }
 
   /**
@@ -108,13 +115,19 @@ class ProviderController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show({ params, request, response, view }) {
-    try {
-      const id = request.input('id')
-      const provider = await Provider.findOrFail(id)
-      return response.send({ success: true, data: provider })
-    } catch (error) {
-      return response.send({ success: false, message: 'Falha ao tentar buscar prestador' })
+  async show({ params, request, response }) {
+    const { id, token, provider_id } = request.all()
+    const user = await User.findOrFail(id)
+
+    if (user.token == token) {
+      try {
+        const provider = await Provider.findOrFail(provider_id)
+        return response.send({ success: true, data: provider })
+      } catch (error) {
+        return response.send({ success: false, message: 'Falha ao tentar buscar prestador' })
+      }
+    } else {
+      return response.send({ success: false, message: 'Falha na autenticação' })
     }
   }
 
@@ -148,7 +161,7 @@ class ProviderController {
         address_state,
         //image_id
       } = request.all()
-  
+
       const provider = await Provider.findOrFail(id)
       provider.merge({
         first_name,
@@ -169,7 +182,7 @@ class ProviderController {
         address_state,
         //image_id
       })
-  
+
       await provider.save()
       return response.send({ success: true, data: provider })
     } catch (error) {
@@ -186,13 +199,19 @@ class ProviderController {
    * @param {Response} ctx.response
    */
   async destroy({ params, request, response }) {
-    try {
-      const id = request.input('id')
-      const provider = await Provider.findOrFail(id)
-      await provider.delete()
-      return response.send({ success: true })
-    } catch (error) {
-      return response.status(500).send({ success: false, message: 'Falha ao tentar deletar prestador' })
+    const { id, token, provider_id } = request.all()
+    const user = await User.findOrFail(id)
+
+    if (user.token == token) {
+      try {
+        const provider = await Provider.findOrFail(provider_id)
+        await provider.delete()
+        return response.send({ success: true })
+      } catch (error) {
+        return response.status(500).send({ success: false, message: 'Falha ao tentar deletar prestador' })
+      }
+    } else {
+      return response.send({ success: false, message: 'Falha na autenticação' })
     }
   }
 }

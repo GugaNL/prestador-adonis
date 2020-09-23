@@ -20,19 +20,25 @@ class UserController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index({ request, response, view, pagination }) {
-    try {
-      const name = request.input('name')
-      const query = User.query()
-      if (name) {
-        query.where('first_name', 'LIKE', `%${name}%`)
-        query.orWhere('last_name', 'LIKE', `%${name}%`)
-        query.orWhere('email', 'LIKE', `%${name}%`)
+  async index({ request, response, pagination }) {
+    const { id, token, name } = request.all()
+    let user = await User.findOrFail(id)
+
+    if (user.token == token) {
+      try {
+        const query = User.query()
+        if (name) {
+          query.where('first_name', 'LIKE', `%${name}%`)
+          query.orWhere('last_name', 'LIKE', `%${name}%`)
+          query.orWhere('email', 'LIKE', `%${name}%`)
+        }
+        const users = await query.paginate(pagination.page, pagination.limit)
+        return response.send({ success: true, data: users })
+      } catch (error) {
+        return response.send({ success: false, message: 'Falha ao tentar listar usuários' })
       }
-      const users = await query.paginate(pagination.page, pagination.limit)
-      return response.send({ success: true, data: users })
-    } catch (error) {
-      return response.send({ success: false, message: 'Falha ao tentar listar usuários' })
+    } else {
+      return response.send({ success: false, message: 'Falha na autenticação' })
     }
   }
 
@@ -107,13 +113,19 @@ class UserController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show({ params, request, response, view }) {
-    try {
-      const id = request.input('id')
-      const user = await User.findOrFail(id)
-      return response.send({ success: true, data: user })
-    } catch (error) {
-      return response.send({ success: false, message: 'Falha ao tentar buscar usuário' })
+  async show({ params, request, response }) {
+    const { id, token, user_id } = request.all()
+
+    const adminUser = await User.findOrFail(id)
+    if (adminUser.token == token) {
+      try {
+        const user = await User.findOrFail(user_id)
+        return response.send({ success: true, data: user })
+      } catch (error) {
+        return response.send({ success: false, message: 'Falha ao tentar buscar usuário' })
+      }
+    } else {
+      return response.send({ success: false, message: 'Falha na autenticação' })
     }
   }
 
@@ -185,13 +197,19 @@ class UserController {
    * @param {Response} ctx.response
    */
   async destroy({ params, request, response }) {
-    try {
-      const id = request.input('id')
-      const user = await User.findOrFail(id)
-      await user.delete()
-      return response.send({ success: true })
-    } catch (error) {
-      return response.status(500).send({ success: false, message: 'Falha ao tentar deletar usuário' })
+    const { id, token, user_id } = request.all()
+    const adminUser = await User.findOrFail(id)
+
+    if (adminUser.token == token) {
+      try {
+        const user = await User.findOrFail(user_id)
+        await user.delete()
+        return response.send({ success: true })
+      } catch (error) {
+        return response.status(500).send({ success: false, message: 'Falha ao tentar deletar usuário' })
+      }
+    } else {
+      return response.send({ success: false, message: 'Falha na autenticação' })
     }
   }
 }
