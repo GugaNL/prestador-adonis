@@ -4,7 +4,7 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 const Service = use('App/Models/Service')
-const Transformer = use('App/Transformer/Admin/ServiceTransformer')
+const Transformer = use('App/Transformers/Admin/ServiceTransformer')
 
 /**
  * Resourceful controller for interacting with services
@@ -19,13 +19,15 @@ class ServiceController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index({ request, response, view, pagination, transform }) {
+  async index({ request, response, pagination, transform, auth }) {
     try {
       const name = request.input('name')
+      const user = await auth.authenticator('user').getUser()
       const query = Service.query()
       if (name) {
         query.where('name', 'LIKE', `%${name}%`)
       }
+      query.where('user_id', user.id)
       var services = await query.paginate(pagination.page, pagination.limit)
       services = await transform.paginate(services, Transformer)
       return response.send({ success: true, data: services })

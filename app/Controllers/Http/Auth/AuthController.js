@@ -131,17 +131,15 @@ class AuthController {
      */
     async loginUser({ request, response, auth }) {
         const { email, password } = request.all()
-
         try {
-            if (await auth.authenticator('user').attempt(email, password)) {
-                let user = await User.findBy('email', email)
-                let generatedToken = await auth.authenticator('user').withRefreshToken().generate(user)
-                return response.send({ generatedToken })
-            }
+            let jsonToken = await auth.authenticator('user').attempt(email, password)
+            let user = await User.findBy('email', email)
+            user.merge({ token: jsonToken.token })
+            user.save()
+            return response.send({ success: true, data: user })
         } catch (error) {
-            return response.send({ success: false, message: 'Erro ao tentar logar' })
+            return response.send({ success: false, message: 'Email não encontrado' })
         }
-        //let data = await auth.authenticator('user').withRefreshToken().attempt(email, password)
     }
 
 
@@ -149,21 +147,25 @@ class AuthController {
      * Logout user
      */
     async logoutUser({ request, response, auth }) {
-        let refresh_token = request.input('refresh_token')
-
-        if (!refresh_token) { //If don't exists token in the body then take in the header 
-            refresh_token = request.header('refresh_token')
+        try {
+            const { id, token } = request.all()
+            let user = await User.findOrFail(id)
+            if (user.token == token) {
+                await User.query().where('id', id).update({ token: '' })
+                return response.send({ success: true, message: 'Deslogado com sucesso' })
+            } else {
+                return response.send({ success: false, message: 'Token inválido' })
+            }
+        } catch (error) {
+            return response.send({ success: false, message: 'Erro ao tentar deslogar' })
         }
-
-        await auth.authenticator('user').revokeTokens([refresh_token], true) //Dont working (need delete the token registry in the database)
-        return response.status(204).send({ success: true, message: 'Deslogado com sucesso' })
     }
 
 
     /**
     * Refresh user token
     */
-    async refreshUser({ request, response, auth }) {
+    /*async refreshUser({ request, response, auth }) {
         let refresh_token = request.input('refresh_token')
 
         if (!refresh_token) { //If don't exists token in the body then take in the header 
@@ -172,7 +174,7 @@ class AuthController {
 
         const user = await auth.authenticator('user').newRefreshToken().generateForRefreshToken(refresh_token) //Generate a new token for variable refresh_token
         return response.send({ data: user })
-    }
+    }*/
 
 
     /**
@@ -180,15 +182,24 @@ class AuthController {
      */
     async loginProvider({ request, response, auth }) {
         const { email, password } = request.all()
-        const data = await auth.authenticator('provider').withRefreshToken().attempt(email, password)
-        return response.send({ data })
+        /*const data = await auth.authenticator('provider').withRefreshToken().attempt(email, password)
+        return response.send({ data })*/
+        try {
+            let jsonToken = await auth.authenticator('provider').attempt(email, password)
+            let provider = await Provider.findBy('email', email)
+            provider.merge({ token: jsonToken.token })
+            provider.save()
+            return response.send({ success: true, data: provider })
+        } catch (error) {
+            return response.send({ success: false, message: 'Email não encontrado' })
+        }
     }
 
 
     /**
      * Refresh provider token
      */
-    async refreshProvider({ request, response, auth }) {
+    /*async refreshProvider({ request, response, auth }) {
         let refresh_token = request.input('refresh_token')
 
         if (!refresh_token) { //If don't exists token in the body then take in the header 
@@ -197,23 +208,31 @@ class AuthController {
 
         const provider = await auth.authenticator('provider').newRefreshToken().generateForRefreshToken(refresh_token) //Generate a new token for variable refresh_token
         return response.send({ data: provider })
-    }
+    }*/
 
 
     /**
      * Logout provider
      */
     async logoutProvider({ request, response, auth }) {
-        let refresh_token = request.input('refresh_token')
-
+        /*let refresh_token = request.input('refresh_token')
         if (!refresh_token) { //If don't exists token in the body then take in the header 
             refresh_token = request.header('refresh_token')
         }
-
         await auth.authenticator('provider').revokeTokens([refresh_token], true) //Dont working (need delete the token registry in the database)
-        //const decryptedToken = Encryption.decrypt(refresh_token)
-        //await TokenProvider.query().where('token', decryptedToken).delete()
-        return response.status(204).send({})
+        return response.status(204).send({})*/
+        try {
+            const { id, token } = request.all()
+            let provider = await Provider.findOrFail(id)
+            if (provider.token == token) {
+                await Provider.query().where('id', id).update({ token: '' })
+                return response.send({ success: true, message: 'Deslogado com sucesso' })
+            } else {
+                return response.send({ success: false, message: 'Token inválido' })
+            }
+        } catch (error) {
+            return response.send({ success: false, message: 'Erro ao tentar deslogar' })
+        }
     }
 
 

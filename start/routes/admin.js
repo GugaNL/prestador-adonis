@@ -82,4 +82,4 @@ Route.group(() => {
     Route.post('delete_user', 'UserController.destroy')
     .as('delete_user')
     
-}).prefix('v1/admin').namespace('Admin').middleware(['auth', 'is:(admin || manager)']) //Means that only can access thoses routes is admin or manager roles (slug)
+}).prefix('v1/admin').namespace('Admin')
