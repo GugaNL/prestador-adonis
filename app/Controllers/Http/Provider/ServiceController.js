@@ -4,6 +4,7 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 const Service = use('App/Models/Service')
+const DesiredService = use('App/Models/DesiredService')
 const Provider = use('App/Models/Provider')
 const Transformer = use('App/Transformers/Admin/ServiceTransformer')
 
@@ -115,9 +116,8 @@ class ServiceController {
     if (provider.token == token) {
       try {
         var service = await Service.findOrFail(service_id)
-        service.merge({ provider_id: id })
-        await service.save()
-        return response.send({ success: true, service })
+        var desiredService = await DesiredService.create({ service_id, user_id: service.user_id, provider_id: id })
+        return response.send({ success: true, desiredService })
       } catch (error) {
         return response.send({ success: false, message: 'Falha ao tentar aceitar o serviço' })
       }
@@ -128,7 +128,7 @@ class ServiceController {
 
 
   /**
-   * Cancel service
+   * Cancel service by provider
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
@@ -140,8 +140,9 @@ class ServiceController {
     if (provider.token == token) {
       try {
         let service = await Service.findOrFail(service_id)
-        service.merge({ provider_id: '' })
-        service.save()
+        let desiredService = await DesiredService.findOrFail(service.id)
+        await desiredService.delete()
+
         return response.send({ success: true, message: 'Serviço cancelado pelo prestador' })
       } catch (error) {
         return response.send({ success: false, message: 'Falha ao tentar cancelar o serviço pelo prestador' })

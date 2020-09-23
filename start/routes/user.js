@@ -24,5 +24,11 @@ Route.group(() => {
     .as('update_service')
     .validator('User/StoreService')
 
+    Route.get('list_interesting', 'ServiceController.listInterestingProviders')
+    .as('list_interesting')
+
+    Route.post('confirm_service', 'ServiceController.confirmService')
+    .as('confirm_service')
+
     //User don't delete the service, just cancel it
 }).prefix('v1/user').namespace('User')

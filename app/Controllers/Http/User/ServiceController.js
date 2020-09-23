@@ -5,6 +5,8 @@
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 const Service = use('App/Models/Service')
 const User = use('App/Models/User')
+const DesiredService = use('App/Models/DesiredService')
+const Database = use('Database')
 const Transformer = use('App/Transformers/Admin/ServiceTransformer')
 
 /**
@@ -147,6 +149,72 @@ class ServiceController {
     } else {
       return response.send({ success: false, message: 'Falha na autenticação' })
     }
+  }
+
+
+  /**
+   * List interesting providers
+   * 
+   * @param {object} ctx
+   * @param {Request} ctx.request
+   * @param {Response} ctx.response
+   */
+  async listInterestingProviders({ params, request, response, pagination }) {
+    const { id, token, service_id } = request.all()
+    let user = await User.findOrFail(id)
+
+    if (user.token == token) {
+      try {
+        const service = await Service.findOrFail(service_id)
+
+        const query = DesiredService.query().where('service_id', service.id)
+        let interestingProviders = await query.paginate(pagination.page, pagination.limit)
+
+        return response.send({ success: true, data: interestingProviders })
+      } catch (error) {
+        return response.send({ success: false, message: 'Falha ao tentar listar prestadores interessados' })
+      }
+    } else {
+      return response.send({ success: false, message: 'Falha na autenticação' })
+    }
+  }
+
+
+  /**
+   * Confirm service
+   * @param {object} ctx
+   * @param {Request} ctx.request
+   * @param {Response} ctx.response
+   */
+  async confirmService({ params, request, response }) {
+
+    const trx = await Database.beginTransaction()
+
+    try {
+      const { id, token, desired_id } = request.all()
+      let user = await User.findOrFail(id)
+
+      if (user.token == token) {
+        try {
+          let desiredService = await DesiredService.findOrFail(desired_id)
+          let service = await Service.findOrFail(desiredService.service_id)
+          service.merge({ provider_id: desiredService.provider_id })
+          await service.save()
+          await DesiredService.query().where('service_id', service.id).delete()
+          await trx.commit() //Commit the transation
+          return response.send({ success: true, message: 'O serviço foi confirmado com sucesso' })
+        } catch (error) {
+          return response.send({ success: false, message: 'Falha ao tentar confirmar o serviço' })
+        }
+      } else {
+        return response.send({ success: false, message: 'Falha na autenticação' })
+      }
+    } catch (error) {
+      await trx.rollback()
+      return response.send({ success: false, message: 'Falha na operação' })
+    }
+
+
   }
 }
 
