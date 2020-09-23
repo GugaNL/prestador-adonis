@@ -55,6 +55,7 @@ class AuthController {
                 address_city,
                 address_state,
                 //image_id
+                status: 'approved'
             }, trx)
 
             const userRole = await Role.findBy('slug', 'client') //Take the role for set in the user
@@ -113,6 +114,7 @@ class AuthController {
                 address_city,
                 address_state,
                 //image_id
+                status: 'pending'
             }, trx)
 
             const providerRole = await Role.findBy('slug', 'client') //Take the role for set in the provider

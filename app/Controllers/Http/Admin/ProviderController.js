@@ -94,6 +94,7 @@ class ProviderController {
         address_city,
         address_state,
         //image_id
+        status: 'pending',
       }, trx)
 
       const providerRole = await Role.findBy('slug', 'client') //Take the role for set in the provider

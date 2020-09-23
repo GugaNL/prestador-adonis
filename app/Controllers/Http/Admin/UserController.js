@@ -4,6 +4,7 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 const User = use('App/Models/User')
+const Provider = use('App/Models/Provider')
 const Role = use('Role')
 const Database = use('Database')
 
@@ -92,6 +93,7 @@ class UserController {
         address_city,
         address_state,
         //image_id
+        status: 'pending'
       }, trx)
 
       const userRole = await Role.findBy('slug', 'client') //Take the role for set in the user
@@ -212,6 +214,32 @@ class UserController {
       return response.send({ success: false, message: 'Falha na autenticação' })
     }
   }
+
+
+  /**
+   * Change status
+   * @param {object} ctx
+   * @param {Request} ctx.request
+   * @param {Response} ctx.response
+   */
+  async changeStatusUser({ params, request, response }) {
+    const { id, token, person_id, status, type } = request.all()
+    const adminUser = await User.findOrFail(id)
+
+    if (adminUser.token == token) {
+      try {
+        let person = type === 'user' ? await User.findOrFail(person_id) : await Provider.findOrFail(person_id)
+        person.merge({ status })
+        person.save()
+        return response.send({ success: true, message: 'Status alterado com sucesso' })
+      } catch (error) {
+        return response.status(500).send({ success: false, message: 'Falha ao tentar alterar status' })
+      }
+    } else {
+      return response.send({ success: false, message: 'Falha na autenticação' })
+    }
+  }
+  
 }
 
 module.exports = UserController
