@@ -9,8 +9,7 @@ class StoreService {
       value: 'required',
       initial_datetime: 'required',
       final_datetime: 'required',
-      category_id: 'required',
-      user_id: 'required'
+      category_id: 'required'
     }
   }
 
@@ -21,8 +20,7 @@ class StoreService {
       'value.required': 'Valor do serviço obrigatório',
       'initial_datetime.required': 'Data de início obrigatório',
       'final_datetime.required': 'Data do fim obrigatório',
-      'category_id.required': 'Categoria obrigatória',
-      'user_id.required': 'Usuário obrigatório'
+      'category_id.required': 'Categoria obrigatória'
     }
   }
 }

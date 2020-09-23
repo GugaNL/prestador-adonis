@@ -15,5 +15,12 @@ Route.group(() => {
 
     Route.get('show_category', 'CategoryController.show')
     .as('show_category') // Provider just can list available categories and show it
+
+
+    Route.post('accept_service', 'ServiceController.acceptService')
+    .as('accept_service')
+
+    Route.post('cancel_service', 'ServiceController.cancelService')
+    .as('cancel_service')
     
 }).prefix('v1/provider').namespace('Provider')

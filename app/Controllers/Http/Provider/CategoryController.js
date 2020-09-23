@@ -4,7 +4,7 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 const Category = use('App/Models/Category')
-const User = use('App/Models/User')
+const Provider = use('App/Models/Provider')
 const Transformer = use('App/Transformers/Admin/CategoryTransformer')
 
 /**
@@ -23,9 +23,9 @@ class CategoryController {
    */
   async index({ request, response, pagination, transform }) {
     const { id, token, name } = request.all()
-    let user = await User.findOrFail(id)
+    let provider = await Provider.findOrFail(id)
 
-    if (user.token == token) {
+    if (provider.token == token) {
       try {
         const query = Category.query() //Take all categories (don't need await because is not execute the query, just create a instance and send value into a var)
         if (name) {
@@ -67,9 +67,9 @@ class CategoryController {
    */
   async show({ params, request, response, transform }) {
     const { id, token, category_id } = request.all()
-    let user = await User.findOrFail(id)
+    let provider = await Provider.findOrFail(id)
 
-    if (user.token == token) {
+    if (provider.token == token) {
       try {
         var category = await Category.findOrFail(category_id) //findOrFail means that if don't find the data then stop the operation and return 404
         category = await transform.item(category, Transformer) //item because is just a one item, not a array in paginate
