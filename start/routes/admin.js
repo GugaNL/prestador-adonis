@@ -81,5 +81,10 @@ Route.group(() => {
 
     Route.post('delete_user', 'UserController.destroy')
     .as('delete_user')
+
+
+    //Stat
+    Route.get('list_stats', 'StatController.listStats')
+    .as('list_stats')
     
 }).prefix('v1/admin').namespace('Admin')
