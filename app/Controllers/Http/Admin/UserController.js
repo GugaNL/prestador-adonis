@@ -7,6 +7,7 @@ const User = use('App/Models/User')
 const Provider = use('App/Models/Provider')
 const Role = use('Role')
 const Database = use('Database')
+const Transformer = use('App/Transformers/Admin/UserTransformer')
 
 /**
  * Resourceful controller for interacting with users
@@ -21,7 +22,7 @@ class UserController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index({ request, response, pagination }) {
+  async index({ request, response, pagination, transform }) {
     const { id, token, name } = request.all()
     let user = await User.findOrFail(id)
 
@@ -35,8 +36,9 @@ class UserController {
             query.orWhere('last_name', 'LIKE', `%${name}%`)
             query.orWhere('email', 'LIKE', `%${name}%`)
           }
-          const users = await query.paginate(pagination.page, pagination.limit)
-          return response.send({ success: true, data: users })
+          var users = await query.paginate(pagination.page, pagination.limit)
+          users = await transform.paginate(users, Transformer)
+          return response.send({ success: true, users })
         } catch (error) {
           return response.send({ success: false, message: 'Falha ao tentar listar usuários' })
         }
@@ -120,14 +122,15 @@ class UserController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show({ params, request, response }) {
+  async show({ params, request, response, transform }) {
     const { id, token, user_id } = request.all()
 
     const adminUser = await User.findOrFail(id)
     if (adminUser.token == token) {
       try {
-        const user = await User.findOrFail(user_id)
-        return response.send({ success: true, data: user })
+        let user = await User.findOrFail(user_id)
+        user = await transform.item(user, Transformer)
+        return response.send({ success: true, user })
       } catch (error) {
         return response.send({ success: false, message: 'Falha ao tentar buscar usuário' })
       }

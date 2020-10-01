@@ -1,7 +1,7 @@
 'use strict'
 
 const BumblebeeTransformer = use('Bumblebee/Transformer')
-
+const moment = require("moment")
 /**
  * ServiceTransformer class
  *
@@ -17,8 +17,8 @@ class ServiceTransformer extends BumblebeeTransformer {
      name: model.name,
      description: model.description,
      value: model.value,
-     initial_datetime: model.initial_datetime,
-     final_datetime: model.final_datetime,
+     initial_datetime: moment(model.initial_datetime).format("DD/MM/YYYY"),
+     final_datetime: moment(model.final_datetime).format("DD/MM/YYYY"),
      status: model.status,
      category_id: model.category_id,
      user_id: model.user_id,

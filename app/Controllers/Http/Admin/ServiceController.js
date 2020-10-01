@@ -5,7 +5,7 @@
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 const Service = use('App/Models/Service')
 const User = use('App/Models/User')
-const Transformer = use('App/Transformer/Admin/ServiceTransformer')
+const Transformer = use('App/Transformers/Admin/ServiceTransformer')
 
 /**
  * Resourceful controller for interacting with services
