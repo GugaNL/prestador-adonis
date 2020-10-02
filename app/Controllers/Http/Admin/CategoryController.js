@@ -36,7 +36,7 @@ class CategoryController {
         //const limit = request.input('limit') //Middleware pagination o substituiu
         var categories = await query.paginate(pagination.page, pagination.limit)
         categories = await transform.paginate(categories, Transformer)
-        return response.send({ success: true, data: categories })
+        return response.send({ success: true, categories })
       } catch (error) {
         return response.send({ success: false, message: 'Falha ao tentar listar categorias' })
       }
@@ -63,7 +63,7 @@ class CategoryController {
         try {
           var category = await Category.create({ name, description, image_id })
           category = await transform.item(category, Transformer) //item because is just a one item, not a array in paginate
-          return response.status(201).send({ success: true, data: category })
+          return response.status(201).send({ success: true, category })
         } catch (error) {
           return response.status(400).send({ success: false, message: 'Erro ao tentar cadastrar categoria' })
         }
@@ -85,13 +85,13 @@ class CategoryController {
    * @param {View} ctx.view
    */
   async show({ params, request, response, transform }) {
-    const { id, token, category_id }
+    const { id, token, category_id } = request.all()
     let user = await User.findOrFail(id)
     if (user.token == token) {
       try {
         var category = await Category.findOrFail(category_id) //findOrFail means that if don't find the data then stop the operation and return 404
         category = await transform.item(category, Transformer) //item because is just a one item, not a array in paginate
-        return response.send({ success: true, data: category })
+        return response.send({ success: true, category })
       } catch (error) {
         return response.send({ success: false, message: 'Falha ao tentar buscar categoria' })
       }

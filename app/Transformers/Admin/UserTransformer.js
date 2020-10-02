@@ -20,6 +20,7 @@ class UserTransformer extends BumblebeeTransformer {
   transform (model) {
     return {
      // add your transformation object here
+     id: model.id,
      first_name: model.first_name,
      last_name: model.last_name,
      email: model.email,

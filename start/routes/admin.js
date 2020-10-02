@@ -77,7 +77,7 @@ Route.group(() => {
 
     Route.post('update_user', 'UserController.update')
     .as('update_user')
-    .validator('Admin/StoreUser')
+    //.validator('Admin/StoreUser')
 
     Route.post('delete_user', 'UserController.destroy')
     .as('delete_user')

@@ -23,7 +23,7 @@ class UserController {
    * @param {View} ctx.view
    */
   async index({ request, response, pagination, transform }) {
-    const { id, token, name } = request.all()
+    const { id, token, first_name, last_name, email } = request.all()
     let user = await User.findOrFail(id)
 
     if (user.token == token) {
@@ -31,10 +31,14 @@ class UserController {
       if (roles.includes('admin', 'manager')) {
         try {
           const query = User.query()
-          if (name) {
-            query.where('first_name', 'LIKE', `%${name}%`)
-            query.orWhere('last_name', 'LIKE', `%${name}%`)
-            query.orWhere('email', 'LIKE', `%${name}%`)
+          if (first_name) {
+            query.where('first_name', 'LIKE', `%${first_name}%`)
+          }
+          if (last_name) {
+            query.orWhere('last_name', 'LIKE', `%${last_name}%`)
+          }
+          if (email) {
+            query.orWhere('email', 'LIKE', `%${email}%`)
           }
           var users = await query.paginate(pagination.page, pagination.limit)
           users = await transform.paginate(users, Transformer)
@@ -148,54 +152,69 @@ class UserController {
    * @param {Response} ctx.response
    */
   async update({ params, request, response }) {
-    try {
-      const {
-        id,
-        first_name,
-        last_name,
-        email,
-        password,
-        birth_date,
-        gender,
-        document,
-        phone,
-        zip_code,
-        address_street,
-        address_number,
-        address_neighborhood,
-        address_complement,
-        address_reference,
-        address_city,
-        address_state,
-        //image_id
-      } = request.all()
 
-      const user = await User.findOrFail(id)
-      user.merge({
-        first_name,
-        last_name,
-        email,
-        password,
-        birth_date,
-        gender,
-        document,
-        phone,
-        zip_code,
-        address_street,
-        address_number,
-        address_neighborhood,
-        address_complement,
-        address_reference,
-        address_city,
-        address_state,
-        //image_id
-      })
+    const {
+      id,
+      token,
+      user_id,
+      first_name,
+      last_name,
+      email,
+      password,
+      birth_date,
+      gender,
+      document,
+      phone,
+      zip_code,
+      address_street,
+      address_number,
+      address_neighborhood,
+      address_complement,
+      address_reference,
+      address_city,
+      address_state,
+      //image_id
+    } = request.all()
 
-      await user.save()
-      return response.send({ success: true, data: user })
-    } catch (error) {
-      return response.send({ success: false, message: 'Falha ao tentar atualizar usuário' })
+    const adminUser = await User.findOrFail(id)
+
+    if (adminUser.token == token) {
+      const roles = await adminUser.getRoles() //Take the role for validate
+      if (roles.includes('admin', 'manager')) {
+        const user = await User.findOrFail(user_id)
+        try {
+          user.merge({
+            first_name,
+            last_name,
+            email,
+            password,
+            birth_date,
+            gender,
+            document,
+            phone,
+            zip_code,
+            address_street,
+            address_number,
+            address_neighborhood,
+            address_complement,
+            address_reference,
+            address_city,
+            address_state,
+            //image_id
+          })
+
+          await user.save()
+          return response.send({ success: true, user })
+        } catch (error) {
+          return response.send({ success: false, message: 'Falha ao tentar atualizar usuário' })
+        }
+      } else {
+        return response.send({ success: false, message: 'Você não tem permissão' })
+      }
+    } else {
+      return response.send({ success: false, message: 'Falha na autenticação' })
     }
+
   }
 
   /**
@@ -247,7 +266,7 @@ class UserController {
       return response.send({ success: false, message: 'Falha na autenticação' })
     }
   }
-  
+
 }
 
 module.exports = UserController

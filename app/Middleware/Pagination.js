@@ -12,7 +12,7 @@ class Pagination {
   async handle (ctx, next) { //Cancel destruction and the the entire object context
     if (ctx.request.method() === 'GET') { //Check if the requisition is GET
       const page = ctx.request.input('page') ? parseInt(ctx.request.input('page')) : 1
-      const limit = ctx.request.input('limit') ? parseInt(ctx.request.input('limit')) : 20
+      const limit = ctx.request.input('limit') ? parseInt(ctx.request.input('limit')) : 15
 
       //Assigns values ​​to the property pagination of the object ctx
       ctx.pagination = {
