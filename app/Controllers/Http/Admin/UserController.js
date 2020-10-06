@@ -63,57 +63,69 @@ class UserController {
    * @param {Response} ctx.response
    */
   async store({ request, response }) {
-    const trx = await Database.beginTransaction()
+    const {
+      id,
+      token,
+      first_name,
+      last_name,
+      email,
+      password,
+      birth_date,
+      gender,
+      document,
+      phone,
+      zip_code,
+      address_street,
+      address_number,
+      address_neighborhood,
+      address_complement,
+      address_reference,
+      address_city,
+      address_state,
+      //image_id
+    } = request.all()
 
-    try {
-      const {
-        first_name,
-        last_name,
-        email,
-        password,
-        birth_date,
-        gender,
-        document,
-        phone,
-        zip_code,
-        address_street,
-        address_number,
-        address_neighborhood,
-        address_complement,
-        address_reference,
-        address_city,
-        address_state,
-        //image_id
-      } = request.all()
+    const adminUser = await User.findOrFail(id)
 
-      const user = await User.create({
-        first_name,
-        last_name,
-        email,
-        password,
-        birth_date,
-        gender,
-        document,
-        phone,
-        zip_code,
-        address_street,
-        address_number,
-        address_neighborhood,
-        address_complement,
-        address_reference,
-        address_city,
-        address_state,
-        //image_id
-        status: 'pending'
-      }, trx)
+    if (adminUser.token == token) {
+      const roles = await adminUser.getRoles() //Take the role for validate
+      if (roles.includes('admin', 'manager')) {
+        try {
+          const trx = await Database.beginTransaction()
+          const user = await User.create({
+            first_name,
+            last_name,
+            email,
+            password,
+            birth_date,
+            gender,
+            document,
+            phone,
+            zip_code,
+            address_street,
+            address_number,
+            address_neighborhood,
+            address_complement,
+            address_reference,
+            address_city,
+            address_state,
+            //image_id
+            status: 'pending'
+          }, trx)
 
-      const userRole = await Role.findBy('slug', 'client') //Take the role for set in the user
-      await user.roles().attach([userRole.id], null, trx) //Set role in the user
-      await trx.commit() //Commit the transation
-      return response.status(201).send({ data: user })
-    } catch (error) {
-      await trx.rollback()
-      return response.status(400).send({ message: 'Erro ao tentar cadastrar usuário' })
+          const userRole = await Role.findBy('slug', 'client') //Take the role for set in the user
+          await user.roles().attach([userRole.id], null, trx) //Set role in the user
+          await trx.commit() //Commit the transation
+          return response.status(201).send({ data: user })
+        } catch (error) {
+          await trx.rollback()
+          return response.status(400).send({ message: 'Erro ao tentar cadastrar usuário' })
+        }
+      } else {
+        return response.send({ success: false, message: 'Você não tem permissão' })
+      }
+    } else {
+      return response.send({ success: false, message: 'Falha na autenticação' })
     }
   }
 
@@ -230,12 +242,17 @@ class UserController {
     const adminUser = await User.findOrFail(id)
 
     if (adminUser.token == token) {
-      try {
-        const user = await User.findOrFail(user_id)
-        await user.delete()
-        return response.send({ success: true })
-      } catch (error) {
-        return response.status(500).send({ success: false, message: 'Falha ao tentar deletar usuário' })
+      const roles = await adminUser.getRoles()
+      if (roles.includes('admin', 'manager')) {
+        try {
+          const user = await User.findOrFail(user_id)
+          await user.delete()
+          return response.send({ success: true })
+        } catch (error) {
+          return response.status(500).send({ success: false, message: 'Falha ao tentar deletar usuário' })
+        }
+      } else {
+        return response.send({ success: false, message: 'Você não tem permissão' })
       }
     } else {
       return response.send({ success: false, message: 'Falha na autenticação' })
