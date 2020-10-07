@@ -82,6 +82,9 @@ Route.group(() => {
     Route.post('delete_user', 'UserController.destroy')
     .as('delete_user')
 
+    Route.post('change_status_user', 'UserController.changeStatusUser')
+    .as('change_status_user')
+
 
     //Stat
     Route.get('list_stats', 'StatController.listStats')

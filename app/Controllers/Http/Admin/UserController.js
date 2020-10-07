@@ -271,13 +271,18 @@ class UserController {
     const adminUser = await User.findOrFail(id)
 
     if (adminUser.token == token) {
-      try {
-        let person = type === 'user' ? await User.findOrFail(person_id) : await Provider.findOrFail(person_id)
-        person.merge({ status })
-        person.save()
-        return response.send({ success: true, message: 'Status alterado com sucesso' })
-      } catch (error) {
-        return response.status(500).send({ success: false, message: 'Falha ao tentar alterar status' })
+      const roles = await adminUser.getRoles()
+      if (roles.includes('admin', 'manager')) {
+        try {
+          let person = type === 'user' ? await User.findOrFail(person_id) : await Provider.findOrFail(person_id)
+          person.merge({ status })
+          person.save()
+          return response.send({ success: true, message: 'Status alterado com sucesso' })
+        } catch (error) {
+          return response.status(500).send({ success: false, message: 'Falha ao tentar alterar status' })
+        }
+      } else {
+        return response.send({ success: false, message: 'Você não tem permissão' })
       }
     } else {
       return response.send({ success: false, message: 'Falha na autenticação' })
