@@ -2,6 +2,9 @@
 
 const BumblebeeTransformer = use('Bumblebee/Transformer')
 const moment = require("moment")
+const UserTransformer = use('App/Transformers/Admin/UserTransformer')
+const CategoryTransformer = use('App/Transformers/Admin/CategoryTransformer')
+
 /**
  * ServiceTransformer class
  *
@@ -9,6 +12,13 @@ const moment = require("moment")
  * @constructor
  */
 class ServiceTransformer extends BumblebeeTransformer {
+  static get defaultInclude () {
+    return [
+      'user',
+      'category'
+    ]
+  }
+
   /**
    * This method is used to transform the data.
    */
@@ -24,6 +34,14 @@ class ServiceTransformer extends BumblebeeTransformer {
      user_id: model.user_id,
      provider_id: model.provider_id
     }
+  }
+
+  includeUser(model) {
+    return this.item(model.getRelated('user'), UserTransformer)
+  }
+
+  includeCategory(model) {
+    return this.item(model.getRelated('category'), CategoryTransformer)
   }
 }
 
