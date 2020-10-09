@@ -3,6 +3,7 @@
 const BumblebeeTransformer = use('Bumblebee/Transformer')
 const moment = require("moment")
 const UserTransformer = use('App/Transformers/Admin/UserTransformer')
+const ProviderTransformer = use('App/Transformers/Admin/ProviderTransformer')
 const CategoryTransformer = use('App/Transformers/Admin/CategoryTransformer')
 
 /**
@@ -15,7 +16,8 @@ class ServiceTransformer extends BumblebeeTransformer {
   static get defaultInclude () {
     return [
       'user',
-      'category'
+      'category',
+      'provider'
     ]
   }
 
@@ -24,6 +26,7 @@ class ServiceTransformer extends BumblebeeTransformer {
    */
   transform (model) {
     return {
+     id: model.id,
      name: model.name,
      description: model.description,
      value: model.value,
@@ -40,9 +43,14 @@ class ServiceTransformer extends BumblebeeTransformer {
     return this.item(model.getRelated('user'), UserTransformer)
   }
 
+  includeProvider(model) {
+    return this.item(model.getRelated('provider'), ProviderTransformer)
+  }
+
   includeCategory(model) {
     return this.item(model.getRelated('category'), CategoryTransformer)
   }
+
 }
 
 module.exports = ServiceTransformer

@@ -34,7 +34,7 @@ class ServiceController {
           }
           var services = await query.paginate(pagination.page, pagination.limit)
           services = await transform.paginate(services, Transformer)
-          return response.send({ success: true, data: services })
+          return response.send({ success: true, services })
         } catch (error) {
           return response.send({ success: false, message: 'Falha ao tentar listar serviços' })
         }
