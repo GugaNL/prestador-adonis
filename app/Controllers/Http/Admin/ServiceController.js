@@ -168,6 +168,37 @@ class ServiceController {
       return response.send({ success: false, message: 'Falha na autenticação' })
     }
   }
+
+
+   /**
+   * Change status
+   * @param {object} ctx
+   * @param {Request} ctx.request
+   * @param {Response} ctx.response
+   */
+  async changeStatusService({ params, request, response }) {
+    const { id, token, service_id, status } = request.all()
+    const adminUser = await User.findOrFail(id)
+
+    if (adminUser.token == token) {
+      const roles = await adminUser.getRoles()
+      if (roles.includes('admin', 'manager')) {
+        try {
+          let service = await Service.findOrFail(service_id)
+          service.merge({ status })
+          service.save()
+          return response.send({ success: true, message: 'Status alterado com sucesso' })
+        } catch (error) {
+          return response.status(500).send({ success: false, message: 'Falha ao tentar alterar status' })
+        }
+      } else {
+        return response.send({ success: false, message: 'Você não tem permissão' })
+      }
+    } else {
+      return response.send({ success: false, message: 'Falha na autenticação' })
+    }
+  }
+
 }
 
 module.exports = ServiceController

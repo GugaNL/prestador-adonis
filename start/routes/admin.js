@@ -41,6 +41,9 @@ Route.group(() => {
     Route.post('delete_service', 'ServiceController.destroy')
     .as('delete_service')
 
+    Route.post('change_status_service', 'ServiceController.changeStatusService')
+    .as('change_status_service')
+
 
     //Image
     Route.resource('images', 'ImageController').apiOnly()
