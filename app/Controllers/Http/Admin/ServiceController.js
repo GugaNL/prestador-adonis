@@ -64,7 +64,7 @@ class ServiceController {
         try {
           var service = await Service.create({ name, description, value, initial_datetime, final_datetime, status, category_id, user_id, provider_id })
           service = await transform.item(service, Transformer)
-          return response.status(201).send({ success: true, data: service })
+          return response.status(201).send({ success: true, service })
         } catch (error) {
           return response.status(400).send({ success: false, message: 'Erro ao tentar cadastrar serviço' })
         }
@@ -95,7 +95,7 @@ class ServiceController {
         try {
           var service = await Service.findOrFail(service_id)
           service = await transform.item(service, Transformer)
-          return response.send({ success: true, data: service })
+          return response.send({ success: true, service })
         } catch (error) {
           return response.send({ success: false, message: 'Falha ao tentar exibir serviço' })
         }
@@ -127,7 +127,7 @@ class ServiceController {
           service.merge({ name, description, value, initial_datetime, final_datetime, status, category_id, user_id, provider_id })
           await service.save()
           service = await transform.item(service, Transformer)
-          return response.send({ success: true, data: service })
+          return response.send({ success: true, service })
         } catch (error) {
           return response.send({ success: false, message: 'Falha ao tentar atualizar serviço' })
         }

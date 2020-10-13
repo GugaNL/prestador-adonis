@@ -6,6 +6,7 @@
 const Category = use('App/Models/Category')
 const User = use('App/Models/User')
 const Transformer = use('App/Transformers/Admin/CategoryTransformer')
+const TransformerCategoryName = use('App/Transformers/Admin/CategoryNameTransformer')
 
 /**
  * Resourceful controller for interacting with categories
@@ -160,6 +161,38 @@ class CategoryController {
       return response.send({ success: false, message: 'Falha na autenticação' })
     }
   }
+
+
+  /**
+   * List all category names
+   *
+   * @param {object} ctx
+   * @param {Request} ctx.request
+   * @param {Response} ctx.response
+   */
+  async listCategoryNames({ request, response, pagination, transform }) {
+    const { id, token } = request.all()
+    let user = await User.findOrFail(id)
+
+    if (user.token == token) {
+      const roles = await user.getRoles() //Take the role for validate
+      roles.includes('admin', 'manager')
+      if (roles.includes('admin', 'manager')) {
+        try {
+          var categories = await Category.query().paginate(pagination.page, pagination.limit)
+          categories = await transform.paginate(categories, TransformerCategoryName)
+          return response.send({ success: true, categories })
+        } catch (error) {
+          return response.status(500).send({ success: false, message: 'Falha ao tentar listar os nomes das categorias' })
+        }
+      } else {
+        return response.send({ success: false, message: 'Você não tem permissão' })
+      }
+    } else {
+      return response.send({ success: false, message: 'Falha na autenticação' })
+    }
+  }
+
 }
 
 module.exports = CategoryController

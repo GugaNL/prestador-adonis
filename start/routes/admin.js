@@ -9,6 +9,9 @@ Route.group(() => {
     Route.get('list_categories', 'CategoryController.index')
     .as('list_categories')
 
+    Route.get('list_categories_names', 'CategoryController.listCategoryNames')
+    .as('list_categories_names')
+
     Route.get('show_category', 'CategoryController.show')
     .as('show_category')
 
