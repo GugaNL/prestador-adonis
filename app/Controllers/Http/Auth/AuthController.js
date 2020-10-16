@@ -93,6 +93,7 @@ class AuthController {
                 address_reference,
                 address_city,
                 address_state,
+                category_id
                 //image_id
             } = request.all()
 
@@ -114,7 +115,8 @@ class AuthController {
                 address_city,
                 address_state,
                 //image_id
-                status: 'pending'
+                status: 'pending',
+                category_id
             }, trx)
 
             const providerRole = await Role.findBy('slug', 'client') //Take the role for set in the provider
