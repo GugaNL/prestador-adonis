@@ -4,7 +4,7 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 const Image = use('App/Models/Image')
-const { manage_single_upload, manage_multiple_upload }
+const { manage_single_upload, manage_multiple_upload } = use('App/Helpers')
 const Helpers = use('Helpers')
 const fs = use('fs')
 const Transformer = use('App/Transformers/Admin/ImageTransformer')

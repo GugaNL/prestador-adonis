@@ -56,13 +56,13 @@ class CategoryController {
    * @param {Response} ctx.response
    */
   async store({ request, response, transform }) {
-    const { id, token, name, description, image_id } = request.all() //Using destruction take the parameters sended
+    const { id, token, name, description, picture } = request.all() //Using destruction take the parameters sended
     let user = await User.findOrFail(id)
     if (user.token == token) {
       const roles = await user.getRoles() //Take the role for validate
       if (roles.includes('admin', 'manager')) {
         try {
-          var category = await Category.create({ name, description, image_id })
+          var category = await Category.create({ name, description, picture })
           category = await transform.item(category, Transformer) //item because is just a one item, not a array in paginate
           return response.status(201).send({ success: true, category })
         } catch (error) {
@@ -111,14 +111,14 @@ class CategoryController {
    * @param {Response} ctx.response
    */
   async update({ params, request, response, transform }) {
-    const { id, token, category_id, name, description, image_id } = request.all()
+    const { id, token, category_id, name, description, picture } = request.all()
     let user = await User.findOrFail(id)
     if (user.token == token) {
       const roles = await user.getRoles() //Take the role for validate
       if (roles.includes('admin', 'manager')) {
         try {
           var category = await Category.findOrFail(category_id)
-          category.merge({ name, description, image_id })
+          category.merge({ name, description, picture })
           await category.save()
           category = await transform.item(category, Transformer) //item because is just a one item, not a array in paginate
           return response.send({ success: true, data: category })

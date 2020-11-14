@@ -1,8 +1,9 @@
 'use strict'
 
 const BumblebeeTransformer = use('Bumblebee/Transformer')
-const ImageTransformer = use('App/Transformers/Admin/ImageTransformer')
+//const ImageTransformer = use('App/Transformers/Admin/ImageTransformer')
 const moment = require("moment")
+const Helpers = use('Helpers')
 /**
  * UserTransformer class
  *
@@ -11,9 +12,6 @@ const moment = require("moment")
  */
 class UserTransformer extends BumblebeeTransformer {
 
-  static get defaultInclude() {
-    return ['image']
-  }
   /**
    * This method is used to transform the data.
    */
@@ -36,13 +34,11 @@ class UserTransformer extends BumblebeeTransformer {
      address_reference: model.address_reference,
      address_city: model.address_city,
      address_state: model.address_state,
-     status: model.status
+     status: model.status,
+     picture: model.picture ? `${Helpers.publicPath('uploads')}\\${model.picture}` : null
     }
   }
 
-  includeImage(model) {
-    return this.item(model.getRelated('image'), ImageTransformer)
-  }
 }
 
 module.exports = UserTransformer

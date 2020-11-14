@@ -55,8 +55,8 @@ const namedMiddleware = {
 |
 */
 const serverMiddleware = [
-  'Adonis/Middleware/Static', //Descomment this for show the images with a url
-  'Adonis/Middleware/Cors'
+  'Adonis/Middleware/Cors',
+  'Adonis/Middleware/Static' //Descomment this for show the images with a url
 ]
 
 Server

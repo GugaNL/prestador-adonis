@@ -8,6 +8,8 @@ const Provider = use('App/Models/Provider')
 const Role = use('Role')
 const Database = use('Database')
 const Transformer = use('App/Transformers/Admin/UserTransformer')
+const Helpers = use('Helpers')
+const { manage_single_upload } = use('App/Helpers')
 
 /**
  * Resourceful controller for interacting with users
@@ -82,8 +84,27 @@ class UserController {
       address_reference,
       address_city,
       address_state,
-      //image_id
     } = request.all()
+
+    const userImage = request.file('user_image', {
+      types: ['image'],
+      size: '2mb'
+    })
+
+    let imagePath = ''
+    
+    if (userImage) {
+      const file = await manage_single_upload(userImage)
+      if (file.moved()) {
+        /*var image = await Image.create({
+          path: file.fileName,
+          size: file.size,
+          original_name: file.clientName,
+          extension: file.subtype
+        })*/
+        imagePath = file.fileName
+      }
+    }
 
     const adminUser = await User.findOrFail(id)
 
@@ -95,6 +116,7 @@ class UserController {
           const user = await User.create({
             first_name,
             last_name,
+            imagePath,
             email,
             password,
             birth_date,
@@ -109,7 +131,6 @@ class UserController {
             address_reference,
             address_city,
             address_state,
-            //image_id
             status: 'pending'
           }, trx)
 
@@ -185,8 +206,21 @@ class UserController {
       address_reference,
       address_city,
       address_state,
-      //image_id
     } = request.all()
+
+    const userImage = request.file('user_image', {
+      types: ['image'],
+      size: '2mb'
+    })
+
+    let picture = ''
+    
+    if (userImage) {
+      const file = await manage_single_upload(userImage)
+      if (file.moved()) {
+        picture = file.fileName
+      }
+    }
 
     const adminUser = await User.findOrFail(id)
 
@@ -198,6 +232,7 @@ class UserController {
           user.merge({
             first_name,
             last_name,
+            picture,
             email,
             password,
             birth_date,
@@ -212,7 +247,6 @@ class UserController {
             address_reference,
             address_city,
             address_state,
-            //image_id
           })
 
           await user.save()
