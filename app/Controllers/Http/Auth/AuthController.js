@@ -167,18 +167,23 @@ class AuthController {
 
 
     /**
-    * Refresh user token
+    * Check user token
     */
-    /*async refreshUser({ request, response, auth }) {
-        let refresh_token = request.input('refresh_token')
+    async refreshUser({ request, response }) {
+        let token = request.input('token')
 
-        if (!refresh_token) { //If don't exists token in the body then take in the header 
-            refresh_token = request.header('refresh_token')
+        if (!token) { //If don't exists token in the body then take in the header 
+        token = request.header('token')
         }
 
-        const user = await auth.authenticator('user').newRefreshToken().generateForRefreshToken(refresh_token) //Generate a new token for variable refresh_token
-        return response.send({ data: user })
-    }*/
+        let user = await User.findBy('token', token)
+
+        if (user) {
+            return response.send({ success: true, user })
+        } else {
+            return response.send({ success: false, message: 'Erro na autenticação' })
+        }
+    }
 
 
     /**
@@ -201,18 +206,23 @@ class AuthController {
 
 
     /**
-     * Refresh provider token
+     * Check provider token
      */
-    /*async refreshProvider({ request, response, auth }) {
-        let refresh_token = request.input('refresh_token')
+    async refreshProvider({ request, response }) {
+        let token = request.input('token')
 
-        if (!refresh_token) { //If don't exists token in the body then take in the header 
-            refresh_token = request.header('refresh_token')
+        if (!token) { //If don't exists token in the body then take in the header 
+        token = request.header('token')
         }
 
-        const provider = await auth.authenticator('provider').newRefreshToken().generateForRefreshToken(refresh_token) //Generate a new token for variable refresh_token
-        return response.send({ data: provider })
-    }*/
+        let provider = await Provider.findBy('token', token)
+
+        if (provider) {
+            return response.send({ success: true, provider })
+        } else {
+            return response.send({ success: false, message: 'Erro na autenticação' })
+        }
+    }
 
 
     /**
