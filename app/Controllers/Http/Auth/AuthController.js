@@ -140,7 +140,7 @@ class AuthController {
             let user = await User.findBy('email', email)
             user.merge({ token: jsonToken.token })
             user.save()
-            return response.send({ success: true, data: user })
+            return response.send({ success: true, user })
         } catch (error) {
             return response.send({ success: false, message: 'Email não encontrado' })
         }
@@ -193,7 +193,7 @@ class AuthController {
             let provider = await Provider.findBy('email', email)
             provider.merge({ token: jsonToken.token })
             provider.save()
-            return response.send({ success: true, data: provider })
+            return response.send({ success: true, provider })
         } catch (error) {
             return response.send({ success: false, message: 'Email não encontrado' })
         }
