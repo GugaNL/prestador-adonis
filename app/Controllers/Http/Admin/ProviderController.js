@@ -8,6 +8,7 @@ const User = use('App/Models/User')
 const Transform = use('App/Transformers/Admin/ProviderTransformer')
 const Database = use('Database')
 const Role = use('Role')
+const moment = require("moment")
 
 /**
  * Resourceful controller for interacting with providers
@@ -68,8 +69,9 @@ class ProviderController {
   async store({ request, response }) {
     const trx = await Database.beginTransaction()
 
-    try {
       const {
+        id, 
+        token,
         first_name,
         last_name,
         email,
@@ -87,39 +89,66 @@ class ProviderController {
         address_city,
         address_state,
         category_id
-        //image_id
       } = request.all()
 
-      const provider = await Provider.create({
-        first_name,
-        last_name,
-        email,
-        password,
-        birth_date,
-        gender,
-        document,
-        phone,
-        zip_code,
-        address_street,
-        address_number,
-        address_neighborhood,
-        address_complement,
-        address_reference,
-        address_city,
-        address_state,
-        //image_id
-        status: 'pending',
-        category_id
-      }, trx)
+      const providerImage = request.file('provider_image', {
+        types: ['image'],
+        size: '2mb'
+      })
+  
+      let picture = ''
+      
+      if (providerImage) {
+        const file = await manage_single_upload(providerImage)
+        if (file.moved()) {
+          picture = file.fileName
+        }
+      }
 
-      const providerRole = await Role.findBy('slug', 'client') //Take the role for set in the provider
-      await provider.roles().attach([providerRole.id], null, trx) //Set role in the provider
-      await trx.commit() //Commit the transation
-      return response.status(201).send({ success: true, data: provider })
-    } catch (error) {
-      await trx.rollback()
-      return response.status(400).send({ success: false, message: 'Erro ao tentar cadastrar prestador' })
-    }
+      const adminUser = await User.findOrFail(id)
+
+      if (adminUser.token == token) {
+        const roles = await adminUser.getRoles() //Take the role for validate
+        if (roles.includes('admin', 'manager')) {
+          try {
+            const convertDate = moment(birth_date, "DD/MM/YYYY").format("YYYY-MM-DD")
+            const provider = await Provider.create({
+              first_name,
+              last_name,
+              picture,
+              email,
+              password,
+              birth_date: convertDate,
+              gender,
+              document,
+              phone,
+              zip_code,
+              address_street,
+              address_number,
+              address_neighborhood,
+              address_complement,
+              address_reference,
+              address_city,
+              address_state,
+              status: 'pending',
+              category_id
+            }, trx)
+      
+            const providerRole = await Role.findBy('slug', 'client') //Take the role for set in the provider
+            await provider.roles().attach([providerRole.id], null, trx) //Set role in the provider
+            await trx.commit() //Commit the transation
+            return response.status(201).send({ success: true, provider })
+          } catch (error) {
+            await trx.rollback()
+            return response.status(400).send({ success: false, message: 'Erro ao tentar cadastrar prestador' })
+          }
+        } else {
+          return response.send({ success: false, message: 'Você não tem permissão' })
+        }
+      } else {
+        return response.send({ success: false, message: 'Falha na autenticação' })
+      }
+
   }
 
   /**
@@ -157,9 +186,10 @@ class ProviderController {
    * @param {Response} ctx.response
    */
   async update({ params, request, response }) {
-    try {
       const {
         id,
+        token,
+        provider_id,
         first_name,
         last_name,
         email,
@@ -177,36 +207,62 @@ class ProviderController {
         address_city,
         address_state,
         category_id
-        //image_id
       } = request.all()
 
-      const provider = await Provider.findOrFail(id)
-      provider.merge({
-        first_name,
-        last_name,
-        email,
-        password,
-        birth_date,
-        gender,
-        document,
-        phone,
-        zip_code,
-        address_street,
-        address_number,
-        address_neighborhood,
-        address_complement,
-        address_reference,
-        address_city,
-        address_state,
-        category_id
-        //image_id
+      const providerImage = request.file('provider_image', {
+        types: ['image'],
+        size: '2mb'
       })
+  
+      let picture = ''
+      
+      if (providerImage) {
+        const file = await manage_single_upload(providerImage)
+        if (file.moved()) {
+          picture = file.fileName
+        }
+      }
 
-      await provider.save()
-      return response.send({ success: true, data: provider })
-    } catch (error) {
-      return response.send({ success: false, message: 'Falha ao tentar atualizar prestador' })
-    }
+      const adminUser = await User.findOrFail(id)
+
+      if (adminUser.token == token) {
+        const roles = await adminUser.getRoles() //Take the role for validate
+        if (roles.includes('admin', 'manager')) {
+          try {
+            const convertDate = moment(birth_date, "DD/MM/YYYY").format("YYYY-MM-DD")
+
+            const provider = await Provider.findOrFail(provider_id)
+            provider.merge({
+              first_name,
+              last_name,
+              picture,
+              email,
+              password,
+              birth_date: convertDate,
+              gender,
+              document,
+              phone,
+              zip_code,
+              address_street,
+              address_number,
+              address_neighborhood,
+              address_complement,
+              address_reference,
+              address_city,
+              address_state,
+              category_id
+            })
+      
+            await provider.save()
+            return response.send({ success: true, provider })
+          } catch (error) {
+            return response.send({ success: false, message: 'Falha ao tentar atualizar prestador' })
+          }
+        }
+      } else {
+        return response.send({ success: false, message: 'Falha na autenticação' })
+      }
+
   }
 
   /**

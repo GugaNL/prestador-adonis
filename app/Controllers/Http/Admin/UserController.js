@@ -10,6 +10,7 @@ const Database = use('Database')
 const Transformer = use('App/Transformers/Admin/UserTransformer')
 const Helpers = use('Helpers')
 const { manage_single_upload } = use('App/Helpers')
+const moment = require("moment")
 
 /**
  * Resourceful controller for interacting with users
@@ -91,7 +92,7 @@ class UserController {
       size: '2mb'
     })
 
-    let imagePath = ''
+    let picture = ''
     
     if (userImage) {
       const file = await manage_single_upload(userImage)
@@ -102,7 +103,7 @@ class UserController {
           original_name: file.clientName,
           extension: file.subtype
         })*/
-        imagePath = file.fileName
+        picture = file.fileName
       }
     }
 
@@ -112,14 +113,15 @@ class UserController {
       const roles = await adminUser.getRoles() //Take the role for validate
       if (roles.includes('admin', 'manager')) {
         try {
+          const convertDate = moment(birth_date, "DD/MM/YYYY").format("YYYY-MM-DD")
           const trx = await Database.beginTransaction()
           const user = await User.create({
             first_name,
             last_name,
-            imagePath,
+            picture,
             email,
             password,
-            birth_date,
+            birth_date: convertDate,
             gender,
             document,
             phone,
@@ -137,7 +139,7 @@ class UserController {
           const userRole = await Role.findBy('slug', 'client') //Take the role for set in the user
           await user.roles().attach([userRole.id], null, trx) //Set role in the user
           await trx.commit() //Commit the transation
-          return response.status(201).send({ data: user })
+          return response.status(201).send({ success: true, user })
         } catch (error) {
           await trx.rollback()
           return response.status(400).send({ message: 'Erro ao tentar cadastrar usuário' })
@@ -229,13 +231,14 @@ class UserController {
       if (roles.includes('admin', 'manager')) {
         const user = await User.findOrFail(user_id)
         try {
+          const convertDate = moment(birth_date, "DD/MM/YYYY").format("YYYY-MM-DD")
           user.merge({
             first_name,
             last_name,
             picture,
             email,
             password,
-            birth_date,
+            birth_date: convertDate,
             gender,
             document,
             phone,
