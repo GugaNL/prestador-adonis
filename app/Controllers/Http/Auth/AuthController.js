@@ -7,6 +7,8 @@ const TokenProvider = use('App/Models/TokenProvider')
 const Encryption = use('Encryption')
 const Provider = use('App/Models/Provider')
 const Role = use('Role')
+const { manage_single_upload } = use('App/Helpers')
+const moment = require("moment")
 
 class AuthController {
 
@@ -34,15 +36,37 @@ class AuthController {
                 address_reference,
                 address_city,
                 address_state,
-                //image_id
             } = request.all()
+
+            const userImage = request.file('user_image', {
+                types: ['image'],
+                size: '2mb'
+            })
+
+            let picture = ''
+
+            if (userImage) {
+                const file = await manage_single_upload(userImage)
+                if (file.moved()) {
+                    /*var image = await Image.create({
+                      path: file.fileName,
+                      size: file.size,
+                      original_name: file.clientName,
+                      extension: file.subtype
+                    })*/
+                    picture = file.fileName
+                }
+            }
+
+            const convertDate = moment(birth_date, "DD/MM/YYYY").format("YYYY-MM-DD")
 
             const user = await User.create({
                 first_name,
                 last_name,
+                picture,
                 email,
                 password,
-                birth_date,
+                birth_date: convertDate,
                 gender,
                 document,
                 phone,
@@ -54,14 +78,13 @@ class AuthController {
                 address_reference,
                 address_city,
                 address_state,
-                //image_id
                 status: 'approved'
             }, trx)
 
             const userRole = await Role.findBy('slug', 'client') //Take the role for set in the user
             await user.roles().attach([userRole.id], null, trx) //Set role in the user
             await trx.commit() //Commit the transation
-            return response.status(201).send({ data: user })
+            return response.status(201).send({ success: true, user })
         } catch (error) {
             await trx.rollback()
             return response.status(400).send({ message: 'Erro ao tentar cadastrar usuário' })
@@ -94,15 +117,31 @@ class AuthController {
                 address_city,
                 address_state,
                 category_id
-                //image_id
             } = request.all()
+
+            const providerImage = request.file('provider_image', {
+                types: ['image'],
+                size: '2mb'
+            })
+
+            let picture = ''
+
+            if (providerImage) {
+                const file = await manage_single_upload(providerImage)
+                if (file.moved()) {
+                    picture = file.fileName
+                }
+            }
+
+            const convertDate = moment(birth_date, "DD/MM/YYYY").format("YYYY-MM-DD")
 
             const provider = await Provider.create({
                 first_name,
                 last_name,
+                picture,
                 email,
                 password,
-                birth_date,
+                birth_date: convertDate,
                 gender,
                 document,
                 phone,
@@ -114,7 +153,6 @@ class AuthController {
                 address_reference,
                 address_city,
                 address_state,
-                //image_id
                 status: 'pending',
                 category_id
             }, trx)
@@ -122,7 +160,7 @@ class AuthController {
             const providerRole = await Role.findBy('slug', 'client') //Take the role for set in the provider
             await provider.roles().attach([providerRole.id], null, trx) //Set role in the provider
             await trx.commit() //Commit the transation
-            return response.status(201).send({ data: provider })
+            return response.status(201).send({ success: true, provider })
         } catch (error) {
             await trx.rollback()
             return response.status(400).send({ message: 'Erro ao tentar cadastrar prestador' })
@@ -173,7 +211,7 @@ class AuthController {
         let token = request.input('token')
 
         if (!token) { //If don't exists token in the body then take in the header 
-        token = request.header('token')
+            token = request.header('token')
         }
 
         let user = await User.findBy('token', token)
@@ -212,7 +250,7 @@ class AuthController {
         let token = request.input('token')
 
         if (!token) { //If don't exists token in the body then take in the header 
-        token = request.header('token')
+            token = request.header('token')
         }
 
         let provider = await Provider.findBy('token', token)
