@@ -7,7 +7,7 @@ const URL = require("url-parse");
 const PROD_MYSQL_DB = new URL(Env.get("CLEARDB_DATABASE_URL"));
 
 module.exports = {
-  connection: Env.get("DB_CONNECTION", "sqlite"),
+  connection: Env.get("DB_CONNECTION', 'mysql"),
 
   sqlite: {
     client: "sqlite3",
