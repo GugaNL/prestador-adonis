@@ -5,7 +5,7 @@ const Env = use('Env')
 
 /** @type {import('@adonisjs/ignitor/src/Helpers')} */
 const Helpers = use('Helpers')
-const PROD_MYSQL_DB = new URL(Env.get("DATABASE_URL"))
+const PROD_MYSQL_DB = new URL(Env.get("CLEARDB_DATABASE_URL"))
 
 module.exports = {
   /*
@@ -17,7 +17,7 @@ module.exports = {
   | interacting with SQL databases.
   |
   */
-  connection: Env.get('DB_CONNECTION', 'pg'),
+  connection: Env.get('DB_CONNECTION', 'mysql'),
 
   /*
   |--------------------------------------------------------------------------
